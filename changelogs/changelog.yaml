@@ -16,3 +16,8 @@ releases:
       bugfixes:
         - Fixed issue with missing argspec items config.ports.available_baudrates, config.ports.raw_tcp, config.ports.single_session.
     release_date: '2024-08-27'
+  1.0.6:
+    changes:
+      bugfixes:
+        - Fixed issue with missing argspec items config.ports.dtr_mode.
+    release_date: '2026-02-04'

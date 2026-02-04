@@ -54,6 +54,7 @@ class PortsArgs(object):  # pylint: disable=R0903
                                                       'options': {'baudrate': {'type': 'str'},
                                                                   'available_baudrates': {'type': 'str'},
                                                                   'databits': {'type': 'str'},
+                                                                  'dtr_mode': {'type': 'str'},
                                                                   'escape_char': {'type': 'str'},
                                                                   'id': {'type': 'str'},
                                                                   'ip_alias': {'elements': 'dict',

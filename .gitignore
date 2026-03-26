@@ -1,0 +1,43 @@
+# Ansible
+*.retry
+.cache/
+ansible.cfg
+
+
+# Collection build artifacts
+**/*.tar.gz
+
+# Test output
+tests/output/
+**/tests/output/
+
+# Python
+__pycache__/
+*.py[cod]
+*.pyo
+.eggs/
+*.egg-info/
+.pytest_cache/
+.tox/
+.venv/
+venv/
+env/
+
+# Virtual environments
+.python-version
+
+# Editor
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Credentials / secrets
+*.vault
+vault_password
+.vault_pass

@@ -1,0 +1,34 @@
+name: Unit Tests
+description: Perform ansible-test units
+
+inputs:
+  python-version:
+    required: true
+    type: string
+  collection:
+    required: true
+    type: string
+
+runs:
+  using: 'composite'
+  steps:
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "${{ matrix.python }}"
+
+      - name: Install ansible-core
+        shell: bash
+        run: pip install ansible-core
+
+      - name: Install Ansible Collection
+        shell: bash
+        run: |
+          ansible-galaxy collection install ${{ github.workspace }}/opengear/${{ inputs.collection }}
+
+      - name: Run unit tests
+        shell: bash
+        env:
+          ansible_collections: "/home/runner/.ansible/collections/ansible_collections"
+        working-directory: ${{ env.ansible_collections }}/opengear/${{ matrix.collection }}
+        run: ansible-test units --docker --python ${{ matrix.python }}

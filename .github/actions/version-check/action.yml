@@ -1,0 +1,49 @@
+name: Version Check
+description: Check that the version and changelog has been updated before merge
+
+inputs:
+  collection:
+    required: true
+    type: string
+
+runs:
+  using: 'composite'
+  steps:
+      - name: Check if collection changed
+        id: changed
+        shell: bash
+        run: |
+          if git diff --name-only origin/main... | grep -q '^opengear/${{ matrix.collection }}/'; then
+            echo "changed=true" >> $GITHUB_OUTPUT
+          else
+            echo "changed=false" >> $GITHUB_OUTPUT
+          fi
+
+      - name: Check version bumped
+        if: steps.changed.outputs.changed == 'true'
+        shell: bash
+        run: |
+          OLD=$(git show origin/main:opengear/${{ matrix.collection }}/galaxy.yml \
+            | grep '^version:' | awk '{print $2}')
+          NEW=$(grep '^version:' opengear/${{ matrix.collection }}/galaxy.yml \
+            | awk '{print $2}')
+
+          echo "Previous version: $OLD"
+          echo "New version:      $NEW"
+
+          if [ "$OLD" = "$NEW" ]; then
+            echo "::error::opengear.${{ matrix.collection }} was modified but \
+              galaxy.yml version was not bumped (still $OLD)"
+            exit 1
+          fi
+
+      - name: Check changelog fragment exists
+        if: steps.changed.outputs.changed == 'true'
+        shell: bash
+        run: |
+          FRAGMENTS=$(ls opengear/${{ matrix.collection }}/changelogs/fragments/*.yml 2>/dev/null | wc -l)
+          if [ "$FRAGMENTS" -eq 0 ]; then
+            echo "::error::No changelog fragment found in \
+              opengear/${{ matrix.collection }}/changelogs/fragments/"
+            exit 1
+          fi

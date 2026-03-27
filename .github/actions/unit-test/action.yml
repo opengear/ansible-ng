@@ -21,14 +21,18 @@ runs:
         shell: bash
         run: pip install ansible-core
 
-      - name: Install Ansible Collection
+      - name: Setup ansible_collections
         shell: bash
         run: |
-          ansible-galaxy collection install ${{ github.workspace }}/opengear/${{ inputs.collection }}
+          mkdir -p ${{ github.workspace}}/ansible_collections/opengear
+          cp -r opengear/${{ matrix.collection }} ${{ github.workspace}}/ansible_collections/opengear
+          ls ${{ github.workspace}}/ansible_collections/
+          ls ${{ github.workspace}}/ansible_collections/opengear
+          ls ${{ github.workspace}}/ansible_collections/opengear/om
 
       - name: Run unit tests
         shell: bash
         env:
-          ansible_collections: "/home/runner/.ansible/collections/ansible_collections"
+          ansible_collections: "${{ github.workspace}}/ansible_collections"
         working-directory: ${{ env.ansible_collections }}/opengear/${{ matrix.collection }}
-        run: ansible-test units --docker --python ${{ matrix.python }}
+        run: ansible-test units --docker --requirements --python ${{ matrix.python }}

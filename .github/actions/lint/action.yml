@@ -1,0 +1,27 @@
+name: Lint
+description: Perform ansible lint
+
+inputs:
+  python-version:
+    required: true
+    type: string
+
+runs:
+  using: 'composite'
+  steps:
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: ${{ inputs.python-version }}
+
+      - name: Install dependencies
+        shell: bash
+        run: pip install ansible-core ansible-lint
+
+      - name: Lint opengear.om
+        shell: bash
+        run: ansible-lint opengear/om
+
+      # - name: Lint examples
+      #   shell: bash
+      #   run: ansible-lint examples/

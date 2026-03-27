@@ -1,0 +1,67 @@
+---
+name: Opengear Ansible Collections CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+jobs:
+  lint:
+    runs-on: ubuntu-latest
+    name: Lint
+    steps:
+      - uses: actions/checkout@v4
+      - uses: ./.github/actions/lint
+        with:
+          python-version: "3.11"
+
+  sanity:
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        collection:
+          - om
+        python:
+          - "3.10"
+          - "3.11"
+    name: "Sanity: ${{ matrix.collection }} / python ${{ matrix.python }}"
+    steps:
+      - uses: actions/checkout@v4
+      - uses: ./.github/actions/sanity
+        with:
+          collection: ${{ matrix.collection }}
+          python-version: ${{ matrix.python }}
+
+  unit-test:
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        collection:
+          - om
+        python:
+          - "3.10"
+          - "3.11"
+    name: "Unit Tests: ${{ matrix.collection }} / python ${{ matrix.python }}"
+    steps:
+      - uses: actions/checkout@v4
+      - uses: ./.github/actions/unit-test
+        with:
+          python-version: ${{ matrix.python }}
+          collection: ${{ matrix.collection }}
+
+  version-check:
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        collection:
+          - om
+    name: "Version check: ${{ matrix.collection }}"
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - uses: ./.github/actions/version-check
+        with:
+          collection: ${{ matrix.collection }}

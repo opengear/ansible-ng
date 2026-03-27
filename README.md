@@ -115,6 +115,26 @@ configuration on a Opengear OM network device, using the FQCN:
 Contributions are welcome! Please follow the guidelines below to help us maintain
 a high quality, readable project history.
 
+### Maintainers
+This project is currently maintained by:
+
+<table>
+  <tr>
+    <td align="center">
+      <a href="https://github.com/avankatwyk">
+        <img src="https://github.com/avankatwyk.png?size=80" width="80px;" alt="avankatwyk"/><br />
+        <sub><b>avankatwyk</b></sub>
+      </a>
+    </td>
+    <td align="center">
+      <a href="https://github.com/lachytech">
+        <img src="https://github.com/lachytech.png?size=80" width="80px;" alt="lachytech"/><br />
+        <sub><b>lachytech</b></sub>
+      </a>
+    </td>
+  </tr>
+</table>
+
 ### Getting Started
 
 1. Fork the repository on GitHub

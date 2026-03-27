@@ -15,9 +15,6 @@ description:
   - This HttpApi plugin provides methods to connect to Opengear OM & CM8100 devices over a HTTP(S)-based API.
 options: {}
 version_added: "1.0.2"
-author:
-  - Adrian Van Katwyk (@avankatwyk)
-  - Matt Witmer (@mattwitt)
 '''
 
 import json

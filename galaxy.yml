@@ -3,8 +3,7 @@ name: om
 version: 1.0.5
 readme: README.md
 authors:
-  - Adrian Van Katwyk (@avankatwyk)
-  - Matt Witmer (@mattwitt)
+  - Opengear <software@opengear.com>
 description: Ansible Network Collection for Opengear OM & CM8100 devices.
 license:
   - GPL-3.0-or-later

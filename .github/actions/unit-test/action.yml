@@ -1,0 +1,36 @@
+name: Unit Tests
+description: Perform ansible-test units
+
+inputs:
+  python-version:
+    required: true
+    type: string
+
+runs:
+  using: 'composite'
+  steps:
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "${{ matrix.python }}"
+
+      - name: Install ansible-core
+        shell: bash
+        run: pip install ansible-core
+
+      - name: Setup ansible_collections
+        shell: bash
+        run: |
+          mkdir -p ${{ github.workspace}}/ansible_collections/opengear/om
+          rsync -a --exclude='.git' --exclude='.github' --exclude='.venv' \
+            ./ ${{ github.workspace}}/ansible_collections/opengear/om/
+          ls ${{ github.workspace}}/ansible_collections/
+          ls ${{ github.workspace}}/ansible_collections/opengear
+          ls ${{ github.workspace}}/ansible_collections/opengear/om
+
+      - name: Run unit tests
+        shell: bash
+        env:
+          ansible_collections: "${{ github.workspace}}/ansible_collections"
+        working-directory: ${{ env.ansible_collections }}/opengear/om
+        run: ansible-test units --docker --requirements --python ${{ matrix.python }}

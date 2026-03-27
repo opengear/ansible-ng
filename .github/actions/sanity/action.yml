@@ -1,0 +1,31 @@
+name: Sanity Check
+description: Perform ansible-test sanity
+
+inputs:
+  python-version:
+    required: true
+    type: string
+
+runs:
+  using: 'composite'
+  steps:
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "${{ inputs.python-version }}"
+
+      - name: Install ansible-core
+        shell: bash
+        run: pip install ansible-core
+
+      - name: Install Ansible Collection
+        shell: bash
+        run: |
+          ansible-galaxy collection install ${{ github.workspace }} --force
+
+      - name: Run sanity tests
+        shell: bash
+        env:
+          ansible_collections: "/home/runner/.ansible/collections/ansible_collections"
+        working-directory: ${{ env.ansible_collections }}/opengear/om
+        run: ansible-test sanity --docker --python ${{ inputs.python-version }}

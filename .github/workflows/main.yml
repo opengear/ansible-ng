@@ -15,7 +15,6 @@ jobs:
       - uses: ./.github/actions/lint
         with:
           python-version: "3.11"
-          collection: ${{ matrix.collection }}
 
   sanity:
     runs-on: ubuntu-latest

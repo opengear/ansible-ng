@@ -28,10 +28,12 @@ from ansible_collections.opengear.om.plugins.module_utils.network.om.facts.stati
 from ansible_collections.opengear.om.plugins.module_utils.network.om.facts.pdu.pdu import PduFacts
 from ansible_collections.opengear.om.plugins.module_utils.network.om.facts.services.services import ServicesFacts
 from ansible_collections.opengear.om.plugins.module_utils.network.om.facts.failover.failover import FailoverFacts
+from ansible_collections.opengear.om.plugins.module_utils.network.om.facts.banner.banner import BannerFacts
 
 
 FACT_LEGACY_SUBSETS = {}
 FACT_RESOURCE_SUBSETS = dict(
+    banner=BannerFacts,
     system=SystemFacts,
     users=UsersFacts,
     groups=GroupsFacts,

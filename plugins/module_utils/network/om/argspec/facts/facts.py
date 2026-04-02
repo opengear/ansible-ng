@@ -22,6 +22,7 @@ class FactsArgs(object):  # pylint: disable=R0903
     choices = [
         'all',
         'auth',
+        'banner',
         'conns',
         'groups',
         'physifs',

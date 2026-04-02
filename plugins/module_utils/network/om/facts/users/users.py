@@ -1,14 +1,7 @@
-#
 # -*- coding: utf-8 -*-
-# Copyright 2021 Red Hat
+# Copyright 2024 Opengear Inc.
 # GNU General Public License v3.0+
 # (see COPYING or https://www.gnu.org/licenses/gpl-3.0.txt)
-"""
-The om users fact class
-It is in this file the configuration is collected from the device
-for a given resource, parsed, and the facts tree is populated
-based on the configuration.
-"""
 
 from __future__ import absolute_import, division, print_function
 
@@ -16,15 +9,11 @@ __metaclass__ = type
 
 from copy import deepcopy
 
-from ansible_collections.ansible.netcommon.plugins.module_utils.network.common import (
-    utils,
-)
+from ansible_collections.ansible.netcommon.plugins.module_utils.network.common import utils
 from ansible_collections.opengear.om.plugins.module_utils.network.om.argspec.users.users import UsersArgs
 
 
 class UsersFacts(object):
-    """ The om users fact class
-    """
 
     def __init__(self, module, subspec='config', options='options'):
         self._module = module
@@ -41,17 +30,12 @@ class UsersFacts(object):
         self.generated_spec = utils.generate_dict(facts_argument_spec)
 
     def get_device_data(self, connection):
-        return connection.get(None, 'users')['users']
+        if hasattr(connection, 'send_request'):
+            return connection.send_request(None, 'users')['users']
+        else:
+            raise NotImplementedError("CLI transport not yet supported for users facts")
 
     def populate_facts(self, connection, ansible_facts, data=None):
-        """ Populate the facts for users
-        :param connection: the device connection
-        :param ansible_facts: Facts dictionary
-        :param data: previously collected conf
-        :rtype: dictionary
-        :returns: facts
-        """
-
         if not data:
             data = self.get_device_data(connection)
 
@@ -61,25 +45,17 @@ class UsersFacts(object):
                 obj = self.render_config(self.generated_spec, instance)
                 if obj:
                     objs.append(obj)
+
         ansible_facts['ansible_network_resources'].pop('users', None)
-        facts = {}
         if objs:
             params = utils.validate_config(self.argument_spec, {'config': objs})
-            facts['users'] = params['config']
+            ansible_facts['ansible_network_resources']['users'] = params['config']
+        else:
+            ansible_facts['ansible_network_resources']['users'] = []
 
-        ansible_facts['ansible_network_resources'].update(facts)
         return ansible_facts
 
     def render_config(self, spec, conf):
-        """
-        Render config as dictionary structure and delete keys
-          from spec for null values
-
-        :param spec: The facts tree, generated from the argspec
-        :param conf: The configuration
-        :rtype: dictionary
-        :returns: The generated config
-        """
         config = deepcopy(spec)
         for option in config.keys():
             if option in conf:

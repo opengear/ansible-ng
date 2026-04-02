@@ -12,7 +12,8 @@ DOCUMENTATION = r'''
 name: om
 short_description: HttpApi Plugin for Opengear OM & CM8100 devices
 description:
-  - This HttpApi plugin provides methods to connect to Opengear OM & CM8100 devices over a HTTP(S)-based API.
+  - This HttpApi plugin provides methods to connect to Opengear OM & CM8100
+    devices over a HTTP(S)-based API.
 options: {}
 version_added: "1.0.2"
 author:
@@ -22,18 +23,32 @@ author:
 
 import json
 
+from ansible.module_utils._text import to_text
 from ansible.module_utils.connection import ConnectionError
 from ansible.plugins.httpapi import HttpApiBase
 
 
 def handle_response(response):
-    if response:
-        handled_response = json.loads(response.getvalue())
-        if "error" in handled_response:
-            error = handled_response["error"][0]
-            raise ConnectionError(error["text"], code=error["code"])
-        return handled_response
-    return response
+    """Parse a JSON response body, raising ConnectionError on API errors."""
+    if not response:
+        return None
+
+    raw = to_text(response.getvalue()).strip()
+    if not raw:
+        return None
+
+    try:
+        data = json.loads(raw)
+    except (ValueError, UnicodeError) as exc:
+        raise ConnectionError(
+            "Invalid JSON response: {0}".format(to_text(exc))
+        )
+
+    if "error" in data:
+        error = data["error"][0]
+        raise ConnectionError(error["text"], code=error["code"])
+
+    return data
 
 
 class HttpApi(HttpApiBase):
@@ -41,44 +56,62 @@ class HttpApi(HttpApiBase):
     def __init__(self, *args, **kwargs):
         super(HttpApi, self).__init__(*args, **kwargs)
         self._device_info = None
-        self.path = '/api/v2/'
+        self._api_path = '/api/v2/'
 
     def login(self, username, password):
-        login_path = 'sessions/'
+        if not username or not password:
+            raise ConnectionError("Username and password are required for login")
         data = {'username': username, 'password': password}
-        response = self.send_request(data, login_path, 'POST')
-        self.connection._auth = {'Authorization': 'Token ' + response['session']}
-
-    def get(self, command, path):
-        return self.send_request(data=command, path=path)
-
-    def send_request(self, data, path, method='GET'):
-        headers = {'Content-Type': 'application/json'}
-        response, response_content = self.connection.send(self.path + path, json.dumps(data),
-                                                          method=method, headers=headers)
-        return handle_response(response_content)
+        response = self.send_request(data, 'sessions/', 'POST')
+        try:
+            token = response['session']
+        except (KeyError, TypeError):
+            raise ConnectionError("Login failed: no session token in response")
+        self.connection._auth = {'Authorization': 'Token ' + token}
 
     def logout(self):
-        logout_path = 'sessions/self'
-        self.send_request(None, logout_path, method='DELETE')
+        self.send_request(None, 'sessions/self', 'DELETE')
         self.connection._auth = None
+
+    def update_auth(self, response, response_text):
+        # Token auth is set once in login(); no per-request cookie handling.
+        return None
+
+    def send_request(self, data, path='', method='GET'):
+        headers = {'Content-Type': 'application/json'}
+        body = json.dumps(data) if data is not None else None
+
+        separator = '&' if '?' in path else '?'
+        url = self._api_path + path + separator + 'use_names=true'
+
+        _, response_content = self.connection.send(
+            url,
+            body,
+            method=method,
+            headers=headers,
+        )
+        return handle_response(response_content)
+
 
     def get_device_info(self):
         if self._device_info:
             return self._device_info
 
         device_info = {}
-        version_reply = self.send_request(None, 'system/version')['system_version']
+        version_response = self.send_request(None, 'system/version')['system_version']
+        device_info['firmware_version'] = version_response['firmware_version']
+        device_info['rest_api_version'] = version_response['rest_api_version']
 
-        device_info['firmware_version'] = version_reply['firmware_version']
-        device_info['rest_api_version'] = version_reply['rest_api_version']
+        for endpoint in ('hostname', 'serial_number', 'model_name'):
+            resp = self.send_request(None, 'system/' + endpoint)
+            device_info[endpoint] = resp['system_' + endpoint][endpoint]
 
-        endpoints = ['hostname', 'serial_number', 'model_name']
-        for endpoint in endpoints:
-            device_info[endpoint] = self.send_request(None, 'system/' + endpoint)['system_' + endpoint][endpoint]
         self._device_info = device_info
         return self._device_info
 
     def get_capabilities(self):
-        result = {'device_info': self.get_device_info()}
+        result = {
+            "network_api": "httpapi",
+            "device_info": self.get_device_info(),
+        }
         return json.dumps(result)

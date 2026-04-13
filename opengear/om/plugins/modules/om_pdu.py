@@ -34,14 +34,13 @@ ANSIBLE_METADATA = {
 
 DOCUMENTATION = """
 ---
-module: om_users
-version_added: 1.0.0
-short_description: Manages pdu attributes of opengear om pdu
+module: om_pdu
+version_added: '1.0.0'
+short_description: Manage PDU configuration on Opengear OM devices
 description:
-  - Manages pdu attributes of opengear om pdu.
+  - Manage Power Distribution Unit (PDU) configuration on Opengear OM devices.
 author:
-  - "Adrian Van Katwyk (@avankatwyk)"
-  - "Matt Witmer (@mattwit)"
+  - Opengear (@opengear)
 options:
   config:
     description: Retrieve and update pdu information
@@ -150,6 +149,55 @@ options:
     - gathered
     - rendered
     default: merged
+"""
+
+EXAMPLES = """
+- name: Configure a PDU via SNMP
+  opengear.om.om_pdu:
+    config:
+      - name: rack-pdu-01
+        method: snmp
+        monitor: true
+        snmp:
+          address: 192.168.1.50
+          version: v2c
+          community: public
+          port: 161
+    state: merged
+
+- name: Configure a PDU via shell
+  opengear.om.om_pdu:
+    config:
+      - name: rack-pdu-02
+        method: shell
+        shell:
+          username: admin
+          password: "{{ vault_pdu_password }}"
+          port: "2300"
+    state: merged
+
+- name: Remove all PDU configuration
+  opengear.om.om_pdu:
+    state: deleted
+
+- name: Gather existing PDU configuration
+  opengear.om.om_pdu:
+    state: gathered
+"""
+
+RETURN = """
+before:
+  description: The configuration before the module is executed.
+  returned: always
+  type: dict
+after:
+  description: The configuration after the module is executed.
+  returned: when changed
+  type: dict
+commands:
+  description: The set of commands pushed to the remote device.
+  returned: always
+  type: list
 """
 
 from ansible.module_utils.basic import AnsibleModule

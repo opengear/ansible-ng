@@ -35,26 +35,26 @@ ANSIBLE_METADATA = {
 DOCUMENTATION = """
 ---
 module: om_failover
-version_added: 1.0.0
+version_added: '1.0.0'
 short_description: Manages failover attributes of om failover
 description:
   - Manages failover attributes of om failover
 author:
-  - "Adrian Van Katwyk (@avankaywk)"
-  - "Matt Witmer (@mattwit)"
+  - Opengear (@opengear)
 options:
   config:
     description: failover configuration
     type: dict
-    enabled:
-      type: bool
-      description: failover enabled or disabled
-    probe_physif:
-      description: A Failover event occurs if the probe_address is not reachable on this network interface.
-      type: str
-    probe_address:
-      description: Probe address can be an IPv4/6 address or hostname
-      type: str
+    suboptions:
+      enabled:
+        type: bool
+        description: failover enabled or disabled
+      probe_physif:
+        description: A Failover event occurs if the probe_address is not reachable on this network interface.
+        type: str
+      probe_address:
+        description: Probe address can be an IPv4/6 address or hostname
+        type: str
 
   state:
     description:
@@ -67,6 +67,42 @@ options:
     - gathered
     - rendered
     default: merged
+"""
+
+EXAMPLES = """
+- name: Configure failover
+  opengear.om.om_failover:
+    config:
+      enabled: true
+      probe_address: 8.8.8.8
+      probe_physif: net1
+    state: merged
+
+- name: Disable failover
+  opengear.om.om_failover:
+    config:
+      enabled: false
+    state: merged
+
+- name: Gather failover facts
+  opengear.om.om_facts:
+    gather_network_resources:
+      - failover
+"""
+
+RETURN = """
+before:
+  description: The configuration before the module is executed.
+  returned: always
+  type: dict
+after:
+  description: The configuration after the module is executed.
+  returned: when changed
+  type: dict
+commands:
+  description: The set of commands pushed to the remote device.
+  returned: always
+  type: list
 """
 
 

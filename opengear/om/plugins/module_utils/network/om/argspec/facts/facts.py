@@ -34,7 +34,6 @@ class FactsArgs(object):  # pylint: disable=R0903
     ]
 
     argument_spec = {
-        'gather_subset': dict(default=['!config'], type='list'),
-        'gather_network_resources': dict(choices=choices,
-                                         type='list'),
+        'gather_subset': dict(default=['all'], type='list', elements='str'),
+        'gather_network_resources': dict(choices=choices, type='list', elements='str'),
     }

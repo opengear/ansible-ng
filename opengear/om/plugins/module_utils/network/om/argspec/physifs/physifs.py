@@ -69,7 +69,7 @@ class PhysifsArgs(object):  # pylint: disable=R0903
                                                                                               'type': 'int'},
                                                                                           'id': {'type': 'str'},
                                                                                           'iptype': {'type': 'str'},
-                                                                                          'password': {'type': 'str'},
+                                                                                          'password': {'type': 'str', 'no_log': True},
                                                                                           'slot': {'type': 'int'},
                                                                                           'username': {'type': 'str'}},
                                                                                       'type': 'list'}},

@@ -12,7 +12,8 @@ jobs:
     name: Lint
     steps:
       - uses: actions/checkout@v4
-      - uses: ./.github/actions/lint
+      - name: Run lint checks
+        uses: ./.github/actions/lint
         with:
           python-version: "3.11"
 
@@ -28,7 +29,8 @@ jobs:
     name: "Sanity: ${{ matrix.collection }} / python ${{ matrix.python }}"
     steps:
       - uses: actions/checkout@v4
-      - uses: ./.github/actions/sanity
+      - name: Run sanity check
+        uses: ./.github/actions/sanity
         with:
           collection: ${{ matrix.collection }}
           python-version: ${{ matrix.python }}
@@ -45,7 +47,8 @@ jobs:
     name: "Unit Tests: ${{ matrix.collection }} / python ${{ matrix.python }}"
     steps:
       - uses: actions/checkout@v4
-      - uses: ./.github/actions/unit-test
+      - name: Run unit tests
+        uses: ./.github/actions/unit-test
         with:
           python-version: ${{ matrix.python }}
           collection: ${{ matrix.collection }}
@@ -62,6 +65,7 @@ jobs:
         with:
           fetch-depth: 0
 
-      - uses: ./.github/actions/version-check
+      - name: Run version check
+        uses: ./.github/actions/version-check
         with:
           collection: ${{ matrix.collection }}

@@ -35,88 +35,95 @@ ANSIBLE_METADATA = {
 DOCUMENTATION = """
 ---
 module: om_system
-version_added: 1.0.0
+version_added: '1.0.0'
 short_description: Manages system attributes of om system
 description:
   - Manages system attributes of om system
 author:
-  - "Adrian Van Katwyk (@avankatwyk)"
-  - "Matt Witmer (@mattwit)"
+  - Opengear (@opengear)
 options:
   config:
     description: The provided configuration
     type: dict
-    admin_info:
-      type: dict
-      description: Update the Operations Manager appliance system information
-      suboptions:
-        hostname:
-          type: str
-          description: hostname or address
-        contact:
-          type: str
-          description: contact info
-        location:
-          type: str
-          description: location
-    banner:
-      type: str
-      description: Update the Operations Manager appliance banner text.
-    webui_session_timeout:
-      type: int
-      description: Update the WebUI session timeout (in minutes).
-    cli_session_timeout:
-      type: int
-      description: Update the CLI session timeout (in minutes)
-    system_authorized_keys:
-      description: Add an SSH key for the specified user
-      elements: dict
-      suboptions:
-        id:
-          type: str
-          description: The SSH key id to be deleted.
-        key:
-          type: str
-          description: The SSH key
-        username:
-          type: str
-          description: The user associated with the SSH key
-    ssh_port:
-      type: int
-      description: Update the system SSH port
-    timezone:
-      type: str
-      description: Update the system timezone
-    time:
-      type: str
-      description: Update the Operations Manager current time
-    cell_reliability_test:
-      type: dict
-      description: Update configuration items related to running the cell reliability test.
-      suboptions:
-        enabled:
-          type: bool
-          description: enabled or disabled
-        period:
-          type: int
-          description: period
-        test_url:
-          type: list
-          elements: str
-          description: test usl
-        signal_strength_threshold:
-          type: dict
-          description: signal threshold
-          suboptions:
-            lower:
-              type: int
-              description: lower threshold
-            upper:
-              type: int
-              description: upper threshold
-    reboot:
-      type: bool
-      description: reboot
+    suboptions:
+      admin_info:
+        type: dict
+        description: Update the Operations Manager appliance system information
+        suboptions:
+          hostname:
+            type: str
+            description: hostname or address
+          contact:
+            type: str
+            description: contact info
+          location:
+            type: str
+            description: location
+      banner:
+        type: str
+        description: Update the Operations Manager appliance banner text.
+      hostname:
+        type: str
+        description: hostname or address
+      webui_session_timeout:
+        type: int
+        description: Update the WebUI session timeout (in minutes).
+      cli_session_timeout:
+        type: int
+        description: Update the CLI session timeout (in minutes)
+      system_authorized_keys:
+        description: Add an SSH key for the specified user
+        type: list
+        elements: dict
+        suboptions:
+          id:
+            type: str
+            description: The SSH key id
+          multi_field_identifier:
+            type: str
+            description: Unique identifier for this authorized keys record.
+          key:
+            type: str
+            description: The SSH key
+          username:
+            type: str
+            description: The user associated with the SSH key
+      ssh_port:
+        type: int
+        description: Update the system SSH port
+      timezone:
+        type: str
+        description: Update the system timezone
+      time:
+        type: str
+        description: Update the Operations Manager current time
+      cell_reliability_test:
+        type: dict
+        description: Update configuration items related to running the cell reliability test.
+        suboptions:
+          enabled:
+            type: bool
+            description: enabled or disabled
+          period:
+            type: int
+            description: period
+          test_url:
+            type: list
+            elements: str
+            description: test url
+          signal_strength_threshold:
+            type: dict
+            description: signal threshold
+            suboptions:
+              lower:
+                type: int
+                description: lower threshold
+              upper:
+                type: int
+                description: upper threshold
+      reboot:
+        type: bool
+        description: reboot
   state:
     description:
     - The state of the configuration after module completion.
@@ -130,6 +137,68 @@ options:
     default: merged
 """
 
+EXAMPLES = """
+- name: Configure system information
+  opengear.om.om_system:
+    config:
+      hostname: om-device-01
+      timezone: Australia/Brisbane
+      banner: "Authorized access only"
+      ssh_port: 22
+      webui_session_timeout: 30
+      cli_session_timeout: 30
+    state: merged
+
+- name: Configure admin info
+  opengear.om.om_system:
+    config:
+      admin_info:
+        hostname: om-device-01
+        contact: netops@example.com
+        location: Server Room A, Rack 3
+    state: merged
+
+- name: Add SSH authorized key
+  opengear.om.om_system:
+    config:
+      system_authorized_keys:
+        - username: admin
+          key: "{{ ssh_public_key }}"
+    state: merged
+
+- name: Configure cell reliability test
+  opengear.om.om_system:
+    config:
+      cell_reliability_test:
+        enabled: true
+        period: 300
+        test_url:
+          - https://example.com
+        signal_strength_threshold:
+          lower: -110
+          upper: -70
+    state: merged
+
+- name: Gather system facts
+  opengear.om.om_facts:
+    gather_network_resources:
+      - system
+"""
+
+RETURN = """
+before:
+  description: The configuration before the module is executed.
+  returned: always
+  type: dict
+after:
+  description: The configuration after the module is executed.
+  returned: when changed
+  type: dict
+commands:
+  description: The set of commands pushed to the remote device.
+  returned: always
+  type: list
+"""
 
 from ansible.module_utils.basic import AnsibleModule
 from ansible_collections.opengear.om.plugins.module_utils.network.om.argspec.system.system import SystemArgs

@@ -14,7 +14,7 @@ from __future__ import absolute_import, division, print_function
 __metaclass__ = type
 
 from ansible_collections.opengear.om.plugins.module_utils.network.om.argspec.facts.facts import FactsArgs
-from ansible_collections.ansible.netcommon.plugins.module_utils.network.common.facts.facts import (
+from ansible_collections.opengear.om.plugins.module_utils.network.om.facts.base import (
     FactsBase,
 )
 from ansible_collections.opengear.om.plugins.module_utils.network.om.facts.system.system import SystemFacts

@@ -35,12 +35,12 @@ ANSIBLE_METADATA = {
 DOCUMENTATION = """
 ---
 module: om_users
-version_added: 1.0.0
+version_added: '1.0.0'
 short_description: Manages user attributes of opengear om users
 description:
   - Manages user attributes of opengear om users
 author:
-  - "Adrian Van Katwyk (@avankatwky)"
+  - Opengear (@opengear)
 options:
   config:
     description: Retrieve and update user information
@@ -71,7 +71,6 @@ options:
       ssh_password_enabled:
         type: bool
         description: Whether SSH password access is enabled (default is true). If false a user can only use SSH with SSH keys.
-        default: yes
       groups:
         type: list
         elements: str
@@ -88,6 +87,53 @@ options:
     - gathered
     - rendered
     default: merged
+"""
+
+EXAMPLES = """
+- name: Configure users
+  opengear.om.om_users:
+    config:
+      - username: netops
+        description: Network operations user
+        enabled: true
+        password: "{{ user_password }}"
+        ssh_password_enabled: true
+        groups:
+          - netops
+      - username: readonly
+        description: Read only user
+        enabled: true
+        no_password: false
+        ssh_password_enabled: false
+        groups:
+          - readonly
+    state: merged
+
+- name: Delete a user
+  opengear.om.om_users:
+    config:
+      - username: readonly
+    state: deleted
+
+- name: Gather user facts
+  opengear.om.om_facts:
+    gather_network_resources:
+      - users
+"""
+
+RETURN = """
+before:
+  description: The configuration before the module is executed.
+  returned: always
+  type: dict
+after:
+  description: The configuration after the module is executed.
+  returned: when changed
+  type: dict
+commands:
+  description: The set of commands pushed to the remote device.
+  returned: always
+  type: list
 """
 
 from ansible.module_utils.basic import AnsibleModule

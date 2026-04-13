@@ -34,13 +34,12 @@ ANSIBLE_METADATA = {
 DOCUMENTATION = """
 ---
 module: om_conns
-version_added: 1.0.0
+version_added: '1.0.0'
 short_description: Manages connection attributes of opengear om conns
 description:
   - Manages connection attributes of opengear om conns.
 author:
-  - "Adrian Van Katwyk (@avankatwyk)"
-  - "Matt Witmer (@mattwit)"
+  - Opengear (@opengear)
 options:
   config:
     description: Read and manipulate the network connections on the Operations Manager appliance.
@@ -114,6 +113,43 @@ options:
     default: merged
 """
 
+EXAMPLES = """
+- name: Configure a network connection
+  opengear.om.om_conns:
+    config:
+      - description: static-ipv4-net1
+        mode: static
+        physif: net1
+        ipv4_static_settings:
+          netmask: "255.255.255.0"
+          address: "192.168.1.2"
+          broadcast: "192.168.1.255"
+          gateway: "192.168.1.1"
+      - description: dynamic-ipv6-net1
+        mode: ipv6_automatic
+        physif: net1
+    state: merged
+
+- name: Gather connection facts
+  opengear.om.om_facts:
+    gather_network_resources:
+      - conns
+"""
+
+RETURN = """
+before:
+  description: The configuration before the module is executed.
+  returned: always
+  type: dict
+after:
+  description: The configuration after the module is executed.
+  returned: when changed
+  type: dict
+commands:
+  description: The set of commands pushed to the remote device.
+  returned: always
+  type: list
+"""
 
 from ansible.module_utils.basic import AnsibleModule
 from ansible_collections.opengear.om.plugins.module_utils.network.om.argspec.conns.conns import ConnsArgs

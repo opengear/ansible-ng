@@ -36,13 +36,12 @@ ANSIBLE_METADATA = {
 DOCUMENTATION = """
 ---
 module: om_groups
-version_added: 1.0.0
+version_added: '1.0.0'
 short_description: Manages user attributes of opengear om groups
 description:
   - Manages user attributes of opengear om groups
 author:
-  - "Adrian Van Katwyk (@avankatwyk)"
-  - "Matt Witmer (@mattwit)"
+  - Opengear (@opengear)
 options:
   config:
     description: Retrieve and update user information
@@ -83,6 +82,50 @@ options:
     - gathered
     - rendered
     default: merged
+"""
+
+EXAMPLES = """
+- name: Configure groups
+  opengear.om.om_groups:
+    config:
+      - groupname: netops
+        description: Network operations group
+        enabled: true
+        role: Administrator
+        ports:
+          - port-1
+          - port-2
+      - groupname: readonly
+        description: Read only group
+        enabled: true
+        role: ConsoleUser
+    state: merged
+
+- name: Delete a group
+  opengear.om.om_groups:
+    config:
+      - groupname: readonly
+    state: deleted
+
+- name: Gather group facts
+  opengear.om.om_facts:
+    gather_network_resources:
+      - groups
+"""
+
+RETURN = """
+before:
+  description: The configuration before the module is executed.
+  returned: always
+  type: dict
+after:
+  description: The configuration after the module is executed.
+  returned: when changed
+  type: dict
+commands:
+  description: The set of commands pushed to the remote device.
+  returned: always
+  type: list
 """
 
 from ansible.module_utils.basic import AnsibleModule

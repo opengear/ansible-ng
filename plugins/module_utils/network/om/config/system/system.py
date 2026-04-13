@@ -15,10 +15,10 @@ from __future__ import absolute_import, division, print_function
 
 __metaclass__ = type
 
-from ansible_collections.ansible.netcommon.plugins.module_utils.network.common.cfg.base import (
+from ansible_collections.opengear.om.plugins.module_utils.network.om.config.base import (
     ConfigBase,
 )
-from ansible_collections.ansible.netcommon.plugins.module_utils.network.common.utils import (
+from ansible_collections.opengear.om.plugins.module_utils.network.om.utils.utils import (
     to_list,
     dict_diff,
 )

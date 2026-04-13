@@ -17,24 +17,58 @@ ANSIBLE_METADATA = {'metadata_version': '1.0',
 DOCUMENTATION = """
 ---
 module: om_facts
-version_added: 1.0.0
+version_added: '1.0.0'
 short_description: Get facts about om devices.
 description:
   - Collects facts from network devices running the om operating system.
 author:
-  - "Ansible Network Engineer"
+  - Opengear (@opengear)
 options:
   gather_subset:
     description:
       - When supplied, this argument will restrict the facts collected to a given subset.
     required: false
+    type: list
+    elements: str
     default: 'all'
-    version_added: "2.2"
+    version_added: '1.0.0'
   gather_network_resources:
     description:
       - When supplied, this argument will restrict the facts collected to a given subset.
     required: false
-    version_added: "2.9"
+    type: list
+    elements: str
+    choices:
+      - all
+      - auth
+      - conns
+      - groups
+      - physifs
+      - ports
+      - pdu
+      - services
+      - static_routes
+      - system
+      - users
+    version_added: '1.0.0'
+"""
+
+EXAMPLES = """
+- name: Gather all om facts
+  opengear.om.om_facts:
+    gather_subset: all
+
+- name: Gather system facts only
+  opengear.om.om_facts:
+    gather_network_resources:
+      - system
+"""
+
+RETURN = """
+ansible_network_resources:
+  description: Facts gathered from the device.
+  returned: always
+  type: dict
 """
 
 

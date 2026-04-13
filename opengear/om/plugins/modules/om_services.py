@@ -35,13 +35,12 @@ ANSIBLE_METADATA = {
 DOCUMENTATION = """
 ---
 module: om_services
-version_added: 1.0.0
+version_added: '1.0.0'
 short_description: Manages services attributes of om services
 description:
   - Manages services attributes of om services.
 author:
-  - "Adrian Van Katwyk (@avankatwk)"
-  - "Matt Witmer (@mattwit)"
+  - Opengear (@opengear)
 options:
   config:
     description: The provided configuration
@@ -86,21 +85,22 @@ options:
                 type: str
                 description: challenge password
               private_key:
-                type: string
+                type: str
                 description: private key
           cert:
             type: str
             description: certificate
       ntp:
-        type: dict
         description: ntp configuraiton
+        type: dict
         suboptions:
           enabled:
             type: bool
             description: ntp enabled or disabled
           servers:
-            type: list
             description: list of servers
+            type: list
+            elements: dict
             suboptions:
               value:
                 type: str
@@ -202,7 +202,7 @@ options:
             type: str
             description: snmpv3 auth protocol
           auth_use_plaintext:
-            type: str
+            type: bool
             description: snmpv3 use plaintext password
           auth_password:
             type: str
@@ -366,6 +366,72 @@ options:
     default: merged
 """
 
+EXAMPLES = """
+- name: Configure NTP servers
+  opengear.om.om_services:
+    config:
+      ntp:
+        enabled: true
+        servers:
+          - value: pool.ntp.org
+          - value: time.cloudflare.com
+    state: merged
+
+- name: Configure SNMP daemon
+  opengear.om.om_services:
+    config:
+      snmpd:
+        enabled: true
+        port: 161
+        protocol: udp
+        rocommunity: public
+        security_level: authPriv
+        auth_protocol: SHA
+        auth_password: "{{ snmp_auth_password }}"
+        priv_protocol: AES
+        priv_password: "{{ snmp_priv_password }}"
+    state: merged
+
+- name: Configure syslog forwarding
+  opengear.om.om_services:
+    config:
+      syslog:
+        - address: syslog.example.com
+          port: 514
+          protocol: udp
+          min_severity: warning
+          description: Central syslog server
+    state: merged
+
+- name: Configure SSH service
+  opengear.om.om_services:
+    config:
+      ssh:
+        maxstartups_start: 10
+        maxstartups_full: 100
+        unauthenticated_serial_port_access: false
+    state: merged
+
+- name: Gather services facts
+  opengear.om.om_facts:
+    gather_network_resources:
+      - services
+"""
+
+RETURN = """
+before:
+  description: The configuration before the module is executed.
+  returned: always
+  type: dict
+after:
+  description: The configuration after the module is executed.
+  returned: when changed
+  type: dict
+commands:
+  description: The set of commands pushed to the remote device.
+  returned: always
+  type: list
+"""
 
 from ansible.module_utils.basic import AnsibleModule
 from ansible_collections.opengear.om.plugins.module_utils.network.om.argspec.services.services import ServicesArgs

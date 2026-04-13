@@ -35,13 +35,12 @@ ANSIBLE_METADATA = {
 DOCUMENTATION = """
 ---
 module: om_ports
-version_added: 1.0.0
+version_added: '1.0.0'
 short_description: Manages port attributes of om ports
 description:
   - Manages port attributes of om ports
 author:
-  - "Adrian Van Katwyk (@avankatwky)"
-  - "Matt Witmer (@mattwit)"
+  - Opengear (@opengear)
 options:
   config:
     description: Configuring and viewing ports information
@@ -55,6 +54,21 @@ options:
           id:
             description: The ID of the serial port. This ID can be used to fetch individual ports using the /ports/endpoint.
             type: str
+          name:
+            description: The name of the serial port.
+            type: str
+          portnum:
+            description: The physical port number.
+            type: str
+          available_baudrates:
+            description: The available baud rates for this port.
+            type: str
+          single_session:
+            description: Restrict port to a single session at a time.
+            type: bool
+          raw_tcp:
+            description: Enable raw TCP access to the port.
+            type: bool
           parity:
             description: The format of the parity byte.
             type: str
@@ -158,6 +172,67 @@ options:
     - gathered
     - rendered
     default: merged
+"""
+
+EXAMPLES = """
+- name: Configure serial ports
+  opengear.om.om_ports:
+    config:
+      ports:
+        - portnum: '1'
+          label: router-console
+          mode: consoleServer
+          baudrate: '9600'
+          databits: '8'
+          parity: none
+          stopbits: '1'
+          logging_level: verbose
+        - portnum: '2'
+          label: switch-console
+          mode: consoleServer
+          baudrate: '115200'
+          databits: '8'
+          parity: none
+          stopbits: '1'
+          single_session: true
+    state: merged
+
+- name: Configure auto-discovery schedule
+  opengear.om.om_ports:
+    config:
+      auto_discover:
+        start: true
+        ports:
+          - 1
+          - 2
+          - 3
+        schedule:
+          enabled: true
+          period: weekly
+          day_of_week: 1
+          hour: 2
+          minute: 0
+    state: merged
+
+- name: Gather port facts
+  opengear.om.om_facts:
+    gather_network_resources:
+      - ports
+"""
+
+RETURN = """
+before:
+  description: The configuration before the module is executed.
+  returned: always
+  type: dict
+after:
+  description: The configuration after the module is executed.
+  returned: when changed
+  type: dict
+commands:
+  description: The set of commands pushed to the remote device.
+  returned: always
+  type: list
 """
 
 from ansible.module_utils.basic import AnsibleModule

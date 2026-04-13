@@ -16,9 +16,7 @@ __metaclass__ = type
 
 from copy import deepcopy
 
-from ansible_collections.ansible.netcommon.plugins.module_utils.network.common import (
-    utils,
-)
+from ansible_collections.opengear.om.plugins.module_utils.network.om.utils import utils
 from ansible_collections.opengear.om.plugins.module_utils.network.om.argspec.pdu.pdu import PduArgs
 
 

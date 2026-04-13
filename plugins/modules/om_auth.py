@@ -34,13 +34,12 @@ ANSIBLE_METADATA = {
 DOCUMENTATION = """
 ---
 module: om_auth
-version_added: 1.0.0
+version_added: '1.0.0'
 short_description: Manages auth attributes of om auth
 description:
   - Manages auth attributes of om auth.
 author:
-  - "Adrian Van Katwyk (@avankatwyk)"
-  - "Matt Witmer (@mattwit)"
+  - Opengear (@opengear)
 options:
   config:
     description: auth configuration
@@ -50,7 +49,7 @@ options:
         type: str
         description: auth mode
       policy:
-        description: Checks auth
+        description: Check local credentials after remote auth failure.
         type: str
       tacacsMethod:
         type: str
@@ -151,6 +150,46 @@ options:
     default: merged
 """
 
+EXAMPLES = """
+- name: Configure LDAP authentication
+  opengear.om.om_auth:
+    config:
+      mode: ldap
+      policy: remotelocal
+      timeout: 10
+      ldapBaseDN: dc=example,dc=com
+      ldapBindDN: cn=admin,dc=example,dc=com
+      ldapIgnoreReferrals: true
+      ldapUsernameAttribute: uid
+      ldapGroupMembershipAttribute: gid
+      ldapBindPassword: "{{ ldap_bind_password }}"
+      ldapAuthenticationServers:
+        - hostname: ldap.example.com
+          port: 389
+        - hostname: ldap2.example.com
+          port: 389
+    state: merged
+
+- name: Gather auth facts
+  opengear.om.om_facts:
+    gather_network_resources:
+      - auth
+"""
+
+RETURN = """
+before:
+  description: The configuration before the module is executed.
+  returned: always
+  type: dict
+after:
+  description: The configuration after the module is executed.
+  returned: when changed
+  type: dict
+commands:
+  description: The set of commands pushed to the remote device.
+  returned: always
+  type: list
+"""
 
 from ansible.module_utils.basic import AnsibleModule
 from ansible_collections.opengear.om.plugins.module_utils.network.om.argspec.auth.auth import AuthArgs

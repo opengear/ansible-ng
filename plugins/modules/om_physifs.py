@@ -38,13 +38,12 @@ ANSIBLE_METADATA = {
 DOCUMENTATION = """
 ---
 module: om_physifs
-version_added: 1.0.0
+version_added: '1.0.0'
 short_description: Manages physif attributes of om physifs
 description:
   - Manages physif attributes of om physifs
 author:
-  - "Adrian Van Katwyk (@avankatwyk)"
-  - "Matt Witmer (@mattwit)"
+  - Opengear (@opengear)
 options:
   config:
     description: Configuring and viewing physical interface information
@@ -185,6 +184,59 @@ options:
     - gathered
     - rendered
     default: merged
+"""
+
+EXAMPLES = """
+- name: Configure a physical ethernet interface
+  opengear.om.om_physifs:
+    config:
+      - id: physif-1
+        enabled: true
+        description: Primary management interface
+        mtu: 1500
+        ethernet_setting:
+          link_speed: auto
+
+- name: Configure a cellular interface with dual SIM
+  opengear.om.om_physifs:
+    config:
+      - id: physif-cellular1
+        enabled: true
+        description: Primary cellular interface
+        cellular_setting:
+          active_sim: 1
+          sim_failover_policy: automatic
+          sim_failback_policy: automatic
+          sims:
+            - slot: 1
+              apn: internet
+              iptype: ipv4
+              fail_probe_address: 8.8.8.8
+              fail_probe_count: 5
+              fail_probe_interval: 30
+            - slot: 2
+              apn: backup.internet
+              iptype: ipv4
+              fail_probe_address: 8.8.8.8
+              fail_probe_count: 5
+              fail_probe_interval: 30
+    state: merged
+
+- name: Configure a VLAN interface
+  opengear.om.om_physifs:
+    config:
+      - id: physif-vlan100
+        enabled: true
+        description: VLAN 100
+        vlan_setting:
+          parent_physif: physif-1
+          vlan_id: 100
+    state: merged
+
+- name: Gather physical interface facts
+  opengear.om.om_facts:
+    gather_network_resources:
+      - physifs
 """
 
 from ansible.module_utils.basic import AnsibleModule

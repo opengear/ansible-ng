@@ -36,34 +36,38 @@ DOCUMENTATION = """
 ---
 module: om_static_routes
 short_description: Manages static route attributes of opengear om static_routes.
-version_added: 1.0.0
+version_added: '1.0.0'
 description:
   - Manages static route attributes of opengear om static_routes.
 author:
-  - "Adrian Van Katwyk (@avankaywk)"
-  - "Matt Witmer (@mattwit)"
+  - Opengear (@opengear)
 options:
   config:
     description: Retrieve and update static route information
     type: list
     elements: dict
-    id:
-      description: Unique id of item.
-      type: str
-    destination_address:
-      description: The destination network/host that the route provides access to.
-      type: str
-    destination_netmask:
-      description: Netmask for IPv4/IPv6 (CIDR format).
-      type: int
-    gateway_address:
+    suboptions:
+      id:
+        description: Unique id of item.
+        type: str
+      description:
+        description: A description for the static route.
+        type: str
+      destination_address:
+        description: The destination network/host that the route provides access to.
+        type: str
+      destination_netmask:
+        description: Netmask for IPv4/IPv6 (CIDR format).
+        type: int
+      gateway_address:
         description: The IPv4/IPv6 address of the router gateway that will route packets to the destination address.
         type: str
-    interface:
-      description: The network interface to be associated with the route.
-    metric:
-      description: The route metric, which represents the cost of routing packets via this route.
-      type: int
+      interface:
+        description: The network interface to be associated with the route.
+        type: str
+      metric:
+        description: The route metric, which represents the cost of routing packets via this route.
+        type: int
 
   state:
     description:
@@ -77,6 +81,76 @@ options:
     - gathered
     - rendered
     default: merged
+"""
+
+EXAMPLES = """
+- name: Add a static route
+  opengear.om.om_static_routes:
+    config:
+      - destination_address: 192.168.10.0
+        destination_netmask: 24
+        gateway_address: 10.0.0.1
+        interface: eth0
+        description: Route to office LAN
+        metric: 100
+    state: merged
+
+- name: Add multiple static routes
+  opengear.om.om_static_routes:
+    config:
+      - destination_address: 192.168.10.0
+        destination_netmask: 24
+        gateway_address: 10.0.0.1
+        interface: eth0
+        description: Route to office LAN
+        metric: 100
+      - destination_address: 172.16.0.0
+        destination_netmask: 16
+        gateway_address: 10.0.0.1
+        interface: eth0
+        description: Route to management network
+        metric: 100
+    state: merged
+
+- name: Replace all static routes with a defined set
+  opengear.om.om_static_routes:
+    config:
+      - destination_address: 0.0.0.0
+        destination_netmask: 0
+        gateway_address: 10.0.0.1
+        interface: eth0
+        description: Default gateway
+        metric: 100
+    state: overridden
+
+- name: Delete a specific static route by id
+  opengear.om.om_static_routes:
+    config:
+      - id: "route-1"
+    state: deleted
+
+- name: Delete all static routes
+  opengear.om.om_static_routes:
+    state: deleted
+
+- name: Gather existing static routes
+  opengear.om.om_static_routes:
+    state: gathered
+"""
+
+RETURN = """
+before:
+  description: The configuration before the module is executed.
+  returned: always
+  type: dict
+after:
+  description: The configuration after the module is executed.
+  returned: when changed
+  type: dict
+commands:
+  description: The set of commands pushed to the remote device.
+  returned: always
+  type: list
 """
 
 from ansible.module_utils.basic import AnsibleModule

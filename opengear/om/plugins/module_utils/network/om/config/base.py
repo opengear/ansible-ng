@@ -1,6 +1,8 @@
 # -*- coding: utf-8 -*-
 from __future__ import absolute_import, division, print_function
 
+from ansible.module_utils.connection import Connection
+
 __metaclass__ = type
 
 
@@ -17,7 +19,6 @@ class ConfigBase(object):
         # Set connection via the module's socket path
         if not self._connection:
             try:
-                from ansible.module_utils.connection import Connection
                 self._connection = Connection(self._module._socket_path)
             except Exception:
                 pass

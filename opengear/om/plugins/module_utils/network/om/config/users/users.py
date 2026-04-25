@@ -1,8 +1,4 @@
-#
 # -*- coding: utf-8 -*-
-# Copyright 2021 Red Hat
-# GNU General Public License v3.0+
-# (see COPYING or https://www.gnu.org/licenses/gpl-3.0.txt)
 """
 The om_users class
 It is in this file where the current configuration (as dict)
@@ -15,25 +11,21 @@ from __future__ import absolute_import, division, print_function
 
 __metaclass__ = type
 
-from ansible_collections.opengear.om.plugins.module_utils.network.om.config.base import (
-    ConfigBase,
-)
+from ansible_collections.opengear.om.plugins.module_utils.network.om.config.base import ConfigBase
+from ansible_collections.opengear.om.plugins.module_utils.network.om.facts.facts import Facts
 from ansible_collections.opengear.om.plugins.module_utils.network.om.utils.utils import (
     to_list,
     dict_merge,
     remove_empties,
 )
-from ansible_collections.opengear.om.plugins.module_utils.network.om.facts.facts import Facts
-
-from ansible.module_utils.connection import ConnectionError
-
-from copy import deepcopy
-
 from ansible_collections.opengear.om.plugins.module_utils.network.om.utils.utils import (
     command_builder,
     find_instance_id,
     is_subset,
 )
+from ansible.module_utils.connection import ConnectionError
+
+from copy import deepcopy
 
 
 class Users(ConfigBase):
@@ -157,11 +149,19 @@ class Users(ConfigBase):
             if user_id in id_user_map:
                 data = deepcopy(user)
                 data['id'] = user_id
-                if is_subset(data, remove_empties(id_user_map[user_id])):
+                data_compare = {k: v for k, v in data.items() if k not in ('hashed_password', 'password')}
+                device_compare = {k: v for k, v in remove_empties(id_user_map[user_id]).items() if k not in ('hashed_password', 'password')}
+                if is_subset(data_compare, device_compare):
                     continue
-                if 'groups' not in user or user['groups'] is None:
-                    user['groups'] = []
-            command = command_builder({'user': user}, 'users/', user_id)
+                if 'groups' not in data or data['groups'] is None:
+                    data['groups'] = []
+                if data.get('no_password'):
+                    data.pop('hashed_password', None)
+                    data.pop('password', None)
+            else:
+                data = user
+            data.pop('id', None)
+            command = command_builder({'user': data}, 'users/', user_id)
             if command:
                 commands.append(command)
         return commands
@@ -203,19 +203,20 @@ class Users(ConfigBase):
             data = remove_empties(user)
             user_id = find_instance_id(username_id_map, 'username', data)
             if user_id in id_user_map:
-                device_user = id_user_map[user_id]
-                if 'password' in data:
-                    device_user.pop('hashed_password')
-                elif 'hashed_password' in data:
-                    device_user.pop('password')
+                device_user = deepcopy(id_user_map[user_id])
                 merged_data = dict_merge(device_user, data)
-                if is_subset(merged_data, device_user):
+                data_compare = {k: v for k, v in merged_data.items() if k not in ('hashed_password', 'password')}
+                device_compare = {k: v for k, v in device_user.items() if k not in ('hashed_password', 'password')}
+                if is_subset(data_compare, device_compare):
                     continue
                 else:
                     data = merged_data
                 data.pop('id', None)
             else:
                 user_id = None
+            if data.get('no_password'):
+                data.pop('hashed_password', None)
+                data.pop('password', None)
             command = command_builder({'user': data}, 'users/', user_id)
             if command:
                 commands.append(command)

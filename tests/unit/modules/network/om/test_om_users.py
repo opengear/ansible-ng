@@ -1,32 +1,11 @@
-# (c) 2016 Red Hat Inc.
-#
-# This file is part of Ansible
-#
-# Ansible is free software: you can redistribute it and/or modify
-# it under the terms of the GNU General Public License as published by
-# the Free Software Foundation, either version 3 of the License, or
-# (at your option) any later version.
-#
-# Ansible is distributed in the hope that it will be useful,
-# but WITHOUT ANY WARRANTY; without even the implied warranty of
-# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-# GNU General Public License for more details.
-#
-# You should have received a copy of the GNU General Public License
-# along with Ansible.  If not, see <http://www.gnu.org/licenses/>.
-
-# Make coding more python3-ish
+# -*- coding: utf-8 -*-
 from __future__ import absolute_import, division, print_function
 
 __metaclass__ = type
 
 from ansible_collections.opengear.om.tests.unit.compat.mock import patch
-from ansible_collections.opengear.om.plugins.modules import (
-    om_users,
-)
-from ansible_collections.opengear.om.tests.unit.modules.utils import (
-    set_module_args,
-)
+from ansible_collections.opengear.om.plugins.modules import om_users
+from ansible_collections.opengear.om.tests.unit.modules.utils import set_module_args
 from .om_module import TestOmModule, load_fixture
 
 
@@ -34,8 +13,9 @@ class TestOmUsersModule(TestOmModule):
 
     module = om_users
 
-    def set_up(self):
-        super(TestOmUsersModule, self).set_up()
+    def setUp(self):
+        super(TestOmUsersModule, self).setUp()
+        self.maxDiff = None
 
         self.mock_get_device_data = patch(
             "ansible_collections.opengear.om.plugins.module_utils.network.om."
@@ -43,26 +23,16 @@ class TestOmUsersModule(TestOmModule):
         )
         self.get_device_data = self.mock_get_device_data.start()
 
-        self.mock_get_resource_connection_config = patch(
-            "ansible_collections.ansible.netcommon.plugins.module_utils."
-            "network.common.cfg.base.get_resource_connection"
+        self.mock_connection = patch(
+            "ansible_collections.opengear.om.plugins.module_utils.network.om."
+            "config.base.Connection"
         )
-        self.get_resource_connection_config = (
-            self.mock_get_resource_connection_config.start()
-        )
-        self.mock_get_resource_connection_facts = patch(
-            "ansible_collections.ansible.netcommon.plugins.module_utils."
-            "network.common.facts.facts.get_resource_connection"
-        )
-        self.get_resource_connection_facts = (
-            self.mock_get_resource_connection_facts.start()
-        )
+        self.connection = self.mock_connection.start()
 
     def tearDown(self):
         super(TestOmUsersModule, self).tearDown()
         self.mock_get_device_data.stop()
-        self.mock_get_resource_connection_facts.stop()
-        self.mock_get_resource_connection_config.stop()
+        self.mock_connection.stop()
 
     def load_fixtures(self, commands=None):
         def load_from_file(*args, **kwargs):
@@ -102,11 +72,7 @@ class TestOmUsersModule(TestOmModule):
                         'enabled': False,
                         'no_password': True,
                         'ssh_password_enabled': True,
-                        'password': None,
-                        'hashed_password': (
-                            "{{ 'hash' }}"
-                        ),
-                        'groups': ['g2', 'g1']
+                        'groups': ['g2']
                     }
                 },
                 'method': 'PUT'

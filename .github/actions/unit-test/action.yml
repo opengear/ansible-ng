@@ -12,7 +12,7 @@ runs:
       - name: Set up Python
         uses: actions/setup-python@v5
         with:
-          python-version: "${{ matrix.python }}"
+          python-version: "${{ inputs.python-version }}"
 
       - name: Install ansible-core
         shell: bash
@@ -21,16 +21,13 @@ runs:
       - name: Setup ansible_collections
         shell: bash
         run: |
-          mkdir -p ${{ github.workspace}}/ansible_collections/opengear/om
+          mkdir -p ~/.ansible/collections/ansible_collections/opengear/om
           rsync -a --exclude='.git' --exclude='.github' --exclude='.venv' \
-            ./ ${{ github.workspace}}/ansible_collections/opengear/om/
-          ls ${{ github.workspace}}/ansible_collections/
-          ls ${{ github.workspace}}/ansible_collections/opengear
-          ls ${{ github.workspace}}/ansible_collections/opengear/om
+            ./ ~/.ansible/collections/ansible_collections/opengear/om/
+          find ~/.ansible/collections/ansible_collections/opengear/om/tests -type d
 
       - name: Run unit tests
         shell: bash
-        env:
-          ansible_collections: "${{ github.workspace}}/ansible_collections"
-        working-directory: ${{ env.ansible_collections }}/opengear/om
-        run: ansible-test units --docker --requirements --python ${{ matrix.python }}
+        run: |
+          cd ~/.ansible/collections/ansible_collections/opengear/om
+          ansible-test units --docker --requirements --python ${{ inputs.python-version }}

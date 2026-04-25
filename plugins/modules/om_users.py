@@ -78,6 +78,8 @@ options:
   state:
     description:
     - The state of the configuration after module completion.
+    - When C(merged), list values are replaced with the provided values,
+      not combined with existing values.
     type: str
     choices:
     - merged

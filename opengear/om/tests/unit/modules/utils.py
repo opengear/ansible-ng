@@ -3,8 +3,8 @@ from __future__ import absolute_import, division, print_function
 __metaclass__ = type
 import json
 
-from ansible_collections.arista.eos.tests.unit.compat import unittest
-from ansible_collections.arista.eos.tests.unit.compat.mock import patch
+from ansible_collections.opengear.om.tests.unit.compat import unittest
+from ansible_collections.opengear.om.tests.unit.compat.mock import patch
 from ansible.module_utils import basic
 from ansible.module_utils._text import to_bytes
 
@@ -15,8 +15,7 @@ def set_module_args(args):
     if "_ansible_keep_remote_files" not in args:
         args["_ansible_keep_remote_files"] = False
 
-    args = json.dumps({"ANSIBLE_MODULE_ARGS": args})
-    basic._ANSIBLE_ARGS = to_bytes(args)
+    basic._ANSIBLE_ARGS = to_bytes(json.dumps({"ANSIBLE_MODULE_ARGS": args}))
 
 
 class AnsibleExitJson(Exception):
@@ -46,6 +45,23 @@ class ModuleTestCase(unittest.TestCase):
         self.mock_module.start()
         self.mock_sleep = patch("time.sleep")
         self.mock_sleep.start()
+
+        try:
+            original_load_params = basic._load_params
+
+            def _patched_load_params():
+                args = json.loads(basic._ANSIBLE_ARGS)
+                if isinstance(args, dict) and "ANSIBLE_MODULE_ARGS" in args:
+                    args = args["ANSIBLE_MODULE_ARGS"]
+                return args
+
+            basic._load_params = _patched_load_params
+            if hasattr(basic, '_ANSIBLE_PROFILE'):
+                basic._ANSIBLE_PROFILE = 'module_json_c2m'
+            self.addCleanup(setattr, basic, '_load_params', original_load_params)
+        except Exception:
+            pass
+
         set_module_args({})
         self.addCleanup(self.mock_module.stop)
         self.addCleanup(self.mock_sleep.stop)

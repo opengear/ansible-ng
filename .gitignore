@@ -2,7 +2,13 @@
 *.retry
 .cache/
 ansible.cfg
+ansible_collections/
 
+# Live inventory and playbooks
+inventory/
+inventory.ini
+inventory.yml
+playbooks/
 
 # Collection build artifacts
 **/*.tar.gz

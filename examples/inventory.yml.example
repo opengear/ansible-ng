@@ -1,0 +1,16 @@
+# ------------------------------------------------------------------------------
+# Example inventory.yml
+# ------------------------------------------------------------------------------
+all:
+  children:
+    opengear:
+      hosts:
+        my-device:
+          ansible_host: 192.168.1.1
+      vars:
+        ansible_connection: httpapi
+        ansible_httpapi_use_ssl: true
+        ansible_httpapi_validate_certs: false
+        ansible_network_os: opengear.om.om
+        ansible_user: root
+        ansible_password: default

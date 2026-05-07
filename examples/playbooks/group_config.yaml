@@ -9,24 +9,25 @@
         config:
           - groupname: netgrp
             enabled: true
-            mode: global
-            role: Administrator
             description: Group for users created automatically via network authentication
+            access_rights:
+              - admin
           - groupname: test4
             enabled: true
-            mode: global
-            role: Administrator
             description: This group was changed.
+            access_rights:
+              - admin
           - groupname: test5
             enabled: false
-            mode: global
-            role: Administrator
             description: This group was added.
+            access_rights:
+              - admin
           - groupname: test7
             enabled: true
             description: This group was added.
-            role: ConsoleUser
-            mode: scoped
+            access_rights:
+              - pmshell
+              - web_ui
             ports:
               - serial/by-opengear-id/port01
               - serial/by-opengear-id/port05

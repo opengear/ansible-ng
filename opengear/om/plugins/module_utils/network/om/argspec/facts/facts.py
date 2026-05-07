@@ -23,6 +23,7 @@ class FactsArgs(object):  # pylint: disable=R0903
         'all',
         'auth',
         'conns',
+        'failover',
         'groups',
         'physifs',
         'ports',

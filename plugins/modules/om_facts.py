@@ -85,10 +85,14 @@ def main():
     """
     module = AnsibleModule(argument_spec=FactsArgs.argument_spec,
                            supports_check_mode=True)
-    warnings = ['default value for `gather_subset` '
-                'will be changed to `min` from `!config` v2.11 onwards']
+    warnings = []
 
-    result = Facts(module).get_facts()
+    gather_network_resources = module.params.get('gather_network_resources')
+    gather_subset = module.params.get('gather_subset')
+    result = Facts(module).get_facts(
+        legacy_facts_type=gather_subset,
+        resource_facts_type=gather_network_resources
+    )
 
     ansible_facts, additional_warnings = result
     warnings.extend(additional_warnings)

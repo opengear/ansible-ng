@@ -148,9 +148,15 @@ def generate_dict(spec):
             if 'default' in value:
                 result[key] = value['default']
             elif value.get('type') == 'list':
-                result[key] = []
+                if 'options' in value:
+                    result[key] = [generate_dict(value['options'])]
+                else:
+                    result[key] = []
             elif value.get('type') == 'dict':
-                result[key] = {}
+                if 'options' in value:
+                    result[key] = generate_dict(value['options'])
+                else:
+                    result[key] = {}
             elif value.get('type') == 'bool':
                 result[key] = False
             elif value.get('type') == 'int':

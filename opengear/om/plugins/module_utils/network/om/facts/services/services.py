@@ -41,10 +41,13 @@ class ServicesFacts(object):
     def get_device_data(self, connection):
         data = {}
         for option in self.generated_spec.keys():
-            value = connection.get(None, 'services/' + option)
-            if option == 'syslog':
-                value = {option: value['syslogServers']}
-            data.update(value)
+            try:
+                value = connection.get(None, 'services/' + option)
+                if option == 'syslog':
+                    value = {option: value['syslogServers']}
+                data.update(value)
+            except Exception as e:
+                self._module.warn('Failed to get services/' + option + ': ' + str(e))
         return data
 
     def populate_facts(self, connection, ansible_facts, data=None):

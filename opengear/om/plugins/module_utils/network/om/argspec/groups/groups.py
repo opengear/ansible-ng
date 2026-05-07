@@ -43,6 +43,8 @@ class GroupsArgs(object):  # pylint: disable=R0903
                                             'enabled': {'type': 'bool'},
                                             'groupname': {'type': 'str'},
                                             'id': {'type': 'str'},
+                                            'access_rights': {'elements': 'str', 'type': 'list'},
+                                            'members': {'elements': 'str', 'type': 'list'},
                                             'mode': {'type': 'str'},
                                             'ports': {'elements': 'str', 'type': 'list'},
                                             'role': {'type': 'str'}},

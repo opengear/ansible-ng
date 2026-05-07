@@ -54,22 +54,30 @@ options:
       groupname:
         type: str
         description: group name
+      description:
+        type: str
+        description: A description of the group's purpose.
       enabled:
         type: bool
         description: group enabled or disabled
-      mode:
-        type: str
-        description: group mode
-      role:
-        type: str
-        description: group role
-      description:
-        type: str
-        description: group description
+      access_rights:
+        type: list
+        elements: str
+        description: List of access rights assigned to the group.
+      members:
+        type: list
+        elements: str
+        description: List of user ids or usernames that are members of the group.
       ports:
         type: list
-        description: ports assigned to group
+        description: List of port ids assigned to the group.
         elements: str
+      mode:
+        type: str
+        description: Group mode. Deprecated since 2022/08, use C(access_rights) instead.
+      role:
+        type: str
+        description: Group role. Deprecated since 2022/08, use C(access_rights) instead.
   state:
     description:
     - The state of the configuration after module completion.
@@ -91,14 +99,17 @@ EXAMPLES = """
       - groupname: netops
         description: Network operations group
         enabled: true
-        role: Administrator
-        ports:
-          - port-1
-          - port-2
+        access_rights:
+          - admin
       - groupname: readonly
         description: Read only group
         enabled: true
-        role: ConsoleUser
+        access_rights:
+          - web_ui
+          - pmshell
+        ports:
+          - ports-1
+          - ports-2
     state: merged
 
 - name: Delete a group

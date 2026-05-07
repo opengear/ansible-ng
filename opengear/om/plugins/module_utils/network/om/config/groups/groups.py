@@ -81,7 +81,7 @@ class Groups(ConfigBase):
         else:
             existing_groups_facts = {}
         if self.state in self.ACTION_STATES or self.state == 'rendered':
-            commands.extend(self.set_config(existing_groups_facts))
+            commands.extend(self.set_config(existing_groups_facts, warnings))
         if commands and self.state in self.ACTION_STATES:
             if not self._module.check_mode:
                 for command in commands:
@@ -115,7 +115,7 @@ class Groups(ConfigBase):
         result['warnings'] = warnings
         return result
 
-    def set_config(self, existing_groups_facts):
+    def set_config(self, existing_groups_facts, warnings):
         """ Collect the configuration from the args passed to the module,
             collect the current configuration (as a dict from facts)
 
@@ -125,10 +125,10 @@ class Groups(ConfigBase):
         """
         want = self._module.params['config']
         have = existing_groups_facts
-        resp = self.set_state(want, have)
+        resp = self.set_state(want, have, warnings)
         return to_list(resp)
 
-    def set_state(self, want, have):
+    def set_state(self, want, have, warnings):
         """ Select the appropriate function based on the state provided
 
         :param want: the desired configuration as a dictionary
@@ -139,6 +139,14 @@ class Groups(ConfigBase):
         """
         groupname_id_map = {}
         id_group_map = {}
+
+        # Check for deprecated fields
+        for group in want:
+            if group.get('role'):
+                warnings.append("The 'role' field is deprecated since 2022/08. Use 'access_rights' instead.")
+            if group.get('mode'):
+                warnings.append("The 'mode' field is deprecated since 2022/08. Use 'access_rights' instead.")
+
         for group in have:
             groupname_id_map[group['groupname']] = group['id']
             id_group_map[group['id']] = group

@@ -42,6 +42,7 @@ options:
       - all
       - auth
       - conns
+      - failover
       - groups
       - physifs
       - ports

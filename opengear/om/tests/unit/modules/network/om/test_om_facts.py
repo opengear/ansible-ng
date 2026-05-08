@@ -68,3 +68,29 @@ class TestOmFactsModule(TestOmModule):
         self.assertIn('ansible_facts', result)
         users = result['ansible_facts']['ansible_network_resources'].get('users')
         self.assertFalse(users)
+
+    def test_om_facts_gather_groups(self):
+        self.get_device_data.side_effect = lambda *args, **kwargs: load_fixture(
+            "om_groups_config.cfg"
+        )
+
+        set_module_args({
+            'gather_network_resources': ['groups'],
+        })
+
+        self.mock_get_groups_data = patch(
+            "ansible_collections.opengear.om.plugins.module_utils.network.om."
+            "facts.groups.groups.GroupsFacts.get_device_data"
+        )
+
+        result = self.execute_module(changed=False)
+
+        self.assertIn('ansible_facts', result)
+        self.assertIn('groups', result['ansible_facts']['ansible_network_resources'])
+
+        groups = result['ansible_facts']['ansible_network_resources']['groups']
+        self.assertEqual(len(groups), 2)
+        self.assertEqual(groups[0]['groupname'], 'admin')
+        self.assertEqual(groups[1]['groupname'], 'netgrp')
+
+        self.mock_get_groups_data.stop()

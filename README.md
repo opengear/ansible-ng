@@ -112,6 +112,7 @@ configuration on a Opengear OM network device, using the FQCN:
 
 ## Contributing
 
+<<<<<<< HEAD
 Contributions are welcome! Please follow the guidelines below to help us maintain
 a high quality, readable project history.
 
@@ -218,6 +219,10 @@ git rebase -i main
 - Keep PRs focused; one feature or fix per PR
 - Ensure CI passes before requesting review
 - Reference any related issues in the PR description
+=======
+Contributions are welcome! Please read our [Contributing Guide](CONTRIBUTING.md)
+before submitting a pull request.
+>>>>>>> 03c2316f (docs: Improve CONTRIBUTING guide)
 
 ### Code of Conduct
 This collection follows the Ansible project's [Code of Conduct][].

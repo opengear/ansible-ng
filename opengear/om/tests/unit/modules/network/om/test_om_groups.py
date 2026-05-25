@@ -232,3 +232,34 @@ class TestOmGroupsModule(TestOmModule):
             "The 'role' field is deprecated since 2022/08. Use 'access_rights' instead.",
             result['warnings']
         )
+
+    def test_om_groups_rendered(self):
+        set_module_args({
+            'config': [
+                {
+                    'groupname': 'ansible-test',
+                    'description': 'Test group',
+                    'enabled': True,
+                    'access_rights': ['pmshell'],
+                    'ports': ['ports-1', 'ports-2'],
+                }
+            ],
+            'state': 'rendered',
+        })
+
+        commands = []
+        self.execute_module(changed=False, commands=commands)
+
+    def test_om_groups_gathered(self):
+        set_module_args({
+            'state': 'gathered',
+        })
+
+        result = self.execute_module(changed=False)
+
+        self.assertIn('gathered', result)
+        groups = result['gathered']
+        self.assertEqual(len(groups), 3)
+        self.assertEqual(groups[0]['groupname'], 'admin')
+        self.assertEqual(groups[1]['groupname'], 'netgrp')
+        self.assertEqual(groups[2]['groupname'], 'ansible-test')

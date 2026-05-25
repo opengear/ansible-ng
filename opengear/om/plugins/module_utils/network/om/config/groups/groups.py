@@ -52,7 +52,7 @@ class Groups(ConfigBase):
 
     def __init__(self, module):
         super(Groups, self).__init__(module)
-        self.current_state = None
+        self.current_state = {}
 
     def get_groups_facts(self, data=None):
         """ Get the 'facts' (the current configuration)
@@ -99,8 +99,8 @@ class Groups(ConfigBase):
                             raise exc
                         self.current_state.pop(group_id, None)
             result['changed'] = True
-        if self.state in self.ACTION_STATES:
-            result['commands'] = commands
+
+        result['commands'] = commands
         if self.state in self.ACTION_STATES or self.state == 'gathered':
             changed_groups_facts = self.get_groups_facts(self.current_state.values())
         elif self.state == 'rendered':
@@ -162,6 +162,8 @@ class Groups(ConfigBase):
             commands = self._state_merged(want, groupname_id_map, id_group_map)
         elif state == 'replaced':
             commands = self._state_replaced(want, groupname_id_map, id_group_map)
+        else:
+            commands = []
         return commands
 
     @staticmethod

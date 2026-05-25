@@ -1,36 +1,83 @@
 ---
+- name: Example playbook for managing groups
+  hosts: opengear
+  gather_facts: false
 
-- name: Configure user groups
-  hosts: all
-  connection: httpapi
   tasks:
-    - name: Add groups
+    - name: Gather groups facts
+      opengear.om.om_facts:
+        gather_network_resources:
+          - groups
+      register: facts_result
+
+    - name: Show current groups
+      debug:
+        var: facts_result
+
+    # Create a new group, the new group is merged with current groups config
+    - name: Create operators group
       opengear.om.om_groups:
         config:
-          - groupname: netgrp
+          - groupname: operators
+            description: Regular operator access [Managed by Ansible]
             enabled: true
-            description: Group for users created automatically via network authentication
             access_rights:
-              - admin
-          - groupname: test4
-            enabled: true
-            description: This group was changed.
-            access_rights:
-              - admin
-          - groupname: test5
-            enabled: false
-            description: This group was added.
-            access_rights:
-              - admin
-          - groupname: test7
-            enabled: true
-            description: This group was added.
-            access_rights:
-              - pmshell
               - web_ui
+              - pmshell
             ports:
-              - serial/by-opengear-id/port01
-              - serial/by-opengear-id/port05
-              - serial/by-opengear-id/port16
-        state:
-          overridden
+              - ports-1
+              - ports-2
+              - ports-5
+        state: merged
+      register: group_result
+
+    - name: Show current group
+      debug:
+        var: group_result
+
+    # Modify the group to add an extra port, merged with current groups config
+    - name: Increase scope of operators group (merge)
+      opengear.om.om_groups:
+        config:
+          - groupname: operators
+            ports:
+              - ports-6
+        state: merged
+      register: group_result
+
+    - name: Show current group
+      debug:
+        var: group_result
+
+    # Reduce the access of the group, set expected state with replace.
+    - name: Reduce access for operators group
+      opengear.om.om_groups:
+        config:
+          - groupname: operators
+            description: Regular operator access [Managed by Ansible]
+            enabled: true
+            access_rights:
+              - web_ui
+              - pmshell
+            ports:
+              - ports-1
+              - ports-2
+              - ports-5
+            members: []
+        state: replaced
+      register: group_result
+
+    - name: Show current group
+      debug:
+        var: group_result
+
+    - name: Delete operators group
+      opengear.om.om_groups:
+        config:
+          - groupname: operators
+        state: deleted
+      register: group_result
+
+    - name: Show current group
+      debug:
+        var: group_result

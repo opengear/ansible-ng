@@ -3,6 +3,8 @@
 The Opengear Ansible Collections includes a variety of Ansible content to help
 automate the management of Opengear network appliances.
 
+![GitHub Actions Workflow Status](https://img.shields.io/github/actions/workflow/status/opengear/ansible-collections/.github%2Fworkflows%2Fmain.yml?branch=main)
+
 ## Collections
 At this time there is one collection available for use.
 

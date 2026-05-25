@@ -111,6 +111,10 @@ def dict_diff(base, comparable):
             nested = dict_diff(base[key], value)
             if nested:
                 diff[key] = nested
+        elif isinstance(value, list) and isinstance(base.get(key), list):
+            # Normalise order before comparing
+            if sorted(value) != sorted(base[key]):
+                diff[key] = value
         elif base[key] != value:
             diff[key] = value
     return diff
@@ -122,6 +126,10 @@ def dict_merge(base, other):
     for key, value in other.items():
         if isinstance(value, dict) and isinstance(result.get(key), dict):
             result[key] = dict_merge(result[key], value)
+        elif isinstance(value, list) and isinstance(result.get(key), list):
+            # Union: preserve existing items, append new ones
+            existing = result[key]
+            result[key] = existing + [item for item in value if item not in existing]
         else:
             result[key] = value
     return result

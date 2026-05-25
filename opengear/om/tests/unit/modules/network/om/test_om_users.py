@@ -72,7 +72,7 @@ class TestOmUsersModule(TestOmModule):
                         'enabled': False,
                         'no_password': True,
                         'ssh_password_enabled': True,
-                        'groups': ['g2']
+                        'groups': ['g1', 'g2']
                     }
                 },
                 'method': 'PUT'

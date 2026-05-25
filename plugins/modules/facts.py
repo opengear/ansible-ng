@@ -52,6 +52,7 @@ options:
       - services
       - static_routes
       - system
+      - user_authorized_keys
       - users
     version_added: '1.0.0'
 """

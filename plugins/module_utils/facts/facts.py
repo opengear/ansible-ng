@@ -21,6 +21,7 @@ from ansible_collections.opengear.ng.plugins.module_utils.facts.ports import Por
 from ansible_collections.opengear.ng.plugins.module_utils.facts.services import ServicesFacts
 from ansible_collections.opengear.ng.plugins.module_utils.facts.static_routes import StaticRoutesFacts
 from ansible_collections.opengear.ng.plugins.module_utils.facts.system import SystemFacts
+from ansible_collections.opengear.ng.plugins.module_utils.facts.user_authorized_keys import UserAuthorizedKeysFacts
 from ansible_collections.opengear.ng.plugins.module_utils.facts.users import UsersFacts
 
 
@@ -34,6 +35,7 @@ FACT_RESOURCE_SUBSETS = dict(
     pdu=PduFacts,
     physifs=PhysifsFacts,
     ports=PortsFacts,
+    user_authorized_keys=UserAuthorizedKeysFacts,
     users=UsersFacts,
     services=ServicesFacts,
     static_routes=StaticRoutesFacts,

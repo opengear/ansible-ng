@@ -32,6 +32,28 @@ class TestFactsModule(TestModuleBase):
             ]
             return mock
 
+        def _setup_user_authorized_keys_mocks(self):
+            mock_users = patch(
+                "ansible_collections.opengear.ng.plugins.module_utils."
+                "facts.user_authorized_keys.UserAuthorizedKeysFacts.get_users"
+            )
+            mock_users.start().return_value = [
+                {'username': 'user1', 'id': 'users-1', 'enabled': True},
+                {'username': 'user2', 'id': 'users-2', 'enabled': True},
+            ]
+            mock_keys = patch(
+                "ansible_collections.opengear.ng.plugins.module_utils."
+                "facts.user_authorized_keys.UserAuthorizedKeysFacts.get_device_data"
+            )
+            mock_keys.start().return_value = [
+                {
+                    "id": "users_ssh_authorized_keys-1",
+                    "key": "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIKoIUqQoc2qsvbCUcs86mwG+zNSJfNJJVJTXXd1VC1Qm user@example2.com",
+                    "key_fingerprint": "256 SHA256:LyY9x0V/6FKZRi7eMkEjQ2XNjdkgm9rH+GdBh3IeJ2Q user@example2.com (ED25519)",
+                }
+            ]
+            return mock_users, mock_keys
+
         def _setup_groups_mocks(self):
             mock = patch(
                 "ansible_collections.opengear.ng.plugins.module_utils."
@@ -61,6 +83,7 @@ class TestFactsModule(TestModuleBase):
             return mock_version, mock_status
 
         self.mock_users = _setup_users_mocks(self)
+        self.mock_uak_users, self.mock_uak_keys = _setup_user_authorized_keys_mocks(self)
         self.mock_groups = _setup_groups_mocks(self)
         self.mock_fw_version, self.mock_fw_status = _setup_firmware_upgrade_mocks(self)
 
@@ -73,6 +96,8 @@ class TestFactsModule(TestModuleBase):
     def tearDown(self):
         super(TestFactsModule, self).tearDown()
         self.mock_users.stop()
+        self.mock_uak_users.stop()
+        self.mock_uak_keys.stop()
         self.mock_groups.stop()
         self.mock_fw_version.stop()
         self.mock_fw_status.stop()
@@ -89,6 +114,14 @@ class TestFactsModule(TestModuleBase):
         self.assertIn('ansible_facts', result)
         self.assertIn('ansible_network_resources', result['ansible_facts'])
         self.assertIn('users', result['ansible_facts']['ansible_network_resources'])
+
+    def test_facts_gather_user_authorized_keys(self):
+        """Facts module dispatches correctly to user_authorized_keys facts class"""
+        set_module_args({'gather_network_resources': ['user_authorized_keys']})
+        result = self.execute_module(changed=False)
+
+        self.assertIn('ansible_facts', result)
+        self.assertIn('ansible_network_resources', result['ansible_facts'])
 
     def test_facts_gather_groups(self):
         """Facts module dispatches correctly to groups facts class"""

@@ -117,6 +117,86 @@ class TestOmGroupsModule(TestOmModule):
         ]
         self.execute_module(changed=True, commands=commands)
 
+    # modify existing group with updated ports and rights list via replace
+    def test_om_groups_update_replaced(self):
+        set_module_args({
+            'config': [
+                {
+                    'groupname': 'ansible-test',
+                    'description': 'Test group',
+                    'enabled': True,
+                    'access_rights': ['web_ui'],
+                    'ports': ['ports-1'],
+                }
+            ],
+            'state': 'replaced',
+        })
+
+        commands = [
+            {
+                'path': 'groups/groups-3',
+                'data': {
+                    'group': {
+                        'groupname': 'ansible-test',
+                        'description': 'Test group',
+                        'enabled': True,
+                        'access_rights': ['web_ui',],
+                        'ports': ['ports-1'],
+                        'members': None,
+                        'mode': None,
+                        'role': None,
+                    }
+                },
+                'method': 'PUT'
+            }
+        ]
+        self.execute_module(changed=True, commands=commands)
+
+    # override existing groups list with provided groups
+    def test_om_groups_update_overridden(self):
+        set_module_args({
+            'config': [
+                {
+                    'groupname': 'admin',
+                    'description': 'Overridden groups, only admin remains',
+                    'enabled': True,
+                    'access_rights': ['admin'],
+                    'ports': [],
+                }
+            ],
+            'state': 'overridden',
+        })
+
+        commands = [
+            {
+                'path': 'groups/groups-2',
+                'data': None,
+                'method': 'DELETE'
+            },
+            {
+                'path': 'groups/groups-3',
+                'data': None,
+                'method': 'DELETE'
+            },
+            {
+                'path': 'groups/groups-1',
+                'data': {
+                    'group': {
+                        'groupname': 'admin',
+                        'description': 'Overridden groups, only admin remains',
+                        'enabled': True,
+                        'access_rights': ['admin'],
+                        'ports': [],
+                        'members': None,
+                        'mode': None,
+                        'role': None,
+                    }
+                },
+                'method': 'PUT'
+            }
+        ]
+        self.execute_module(changed=True, commands=commands)
+
     def test_om_groups_deleted(self):
         set_module_args({
             'config': [

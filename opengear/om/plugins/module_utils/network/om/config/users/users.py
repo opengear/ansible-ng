@@ -89,7 +89,7 @@ class Users(ConfigBase):
             if result['changed']:
                 result['after'] = changed_users_facts
         elif self.state == 'rendered':
-            result['rendered'] = self._module.params['config']
+            result['rendered'] = commands
         elif self.state == 'gathered':
             result['gathered'] = existing_users_facts
         result['warnings'] = warnings

@@ -87,6 +87,7 @@ class TestOmFactsModule(TestOmModule):
         self.assertIn('groups', result['ansible_facts']['ansible_network_resources'])
 
         groups = result['ansible_facts']['ansible_network_resources']['groups']
-        self.assertEqual(len(groups), 2)
+        self.assertEqual(len(groups), 3)
         self.assertEqual(groups[0]['groupname'], 'admin')
         self.assertEqual(groups[1]['groupname'], 'netgrp')
+        self.assertEqual(groups[2]['groupname'], 'ansible-test')

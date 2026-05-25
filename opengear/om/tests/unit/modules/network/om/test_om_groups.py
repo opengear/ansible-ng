@@ -38,14 +38,15 @@ class TestOmGroupsModule(TestOmModule):
             return load_fixture("om_groups_config.cfg")
         self.get_device_data.side_effect = load_from_file
 
-    def test_om_groups_merged(self):
+    def test_om_groups_create_merged(self):
         set_module_args({
             'config': [
                 {
-                    'groupname': 'ansible-test',
-                    'description': 'Test group',
+                    'groupname': 'ansible-create',
+                    'description': 'Test group created by Ansible',
                     'enabled': True,
-                    'access_rights': ['admin'],
+                    'access_rights': ['pmshell'],
+                    'ports': ['ports-1', 'ports-3']
                 }
             ],
             'state': 'merged',
@@ -56,10 +57,11 @@ class TestOmGroupsModule(TestOmModule):
                 'path': 'groups/',
                 'data': {
                     'group': {
-                        'groupname': 'ansible-test',
-                        'description': 'Test group',
+                        'groupname': 'ansible-create',
+                        'description': 'Test group created by Ansible',
                         'enabled': True,
-                        'access_rights': ['admin'],
+                        'access_rights': ['pmshell'],
+                        'ports': ['ports-1', 'ports-3'],
                     }
                 },
                 'method': 'POST'
@@ -67,7 +69,7 @@ class TestOmGroupsModule(TestOmModule):
         ]
         self.execute_module(changed=True, commands=commands)
 
-    def test_om_groups_merged_idempotent(self):
+    def test_om_groups_create_merged_idempotent(self):
         set_module_args({
             'config': [
                 {
@@ -83,17 +85,49 @@ class TestOmGroupsModule(TestOmModule):
         commands = []
         self.execute_module(changed=False, commands=commands)
 
+    # modify existing group with updated ports and rights list via merge
+    def test_om_groups_update_merged(self):
+        set_module_args({
+            'config': [
+                {
+                    'groupname': 'ansible-test',
+                    'access_rights': ['web_ui'],
+                    'ports': ['ports-6'],
+                }
+            ],
+            'state': 'merged',
+        })
+
+        commands = [
+            {
+                'path': 'groups/groups-3',
+                'data': {
+                    'group': {
+                        'groupname': 'ansible-test',
+                        'description': 'Test group',
+                        'enabled': True,
+                        'access_rights': ['pmshell', 'web_ui'],
+                        'ports': ['ports-1', 'ports-2', 'ports-6'],
+                        'role': 'ConsoleUser',
+                        'mode': 'scoped',
+                    }
+                },
+                'method': 'PUT'
+            }
+        ]
+        self.execute_module(changed=True, commands=commands)
+
     def test_om_groups_deleted(self):
         set_module_args({
             'config': [
-                {'groupname': 'netgrp'}
+                {'groupname': 'ansible-test'}
             ],
             'state': 'deleted',
         })
 
         commands = [
             {
-                'path': 'groups/groups-2',
+                'path': 'groups/groups-3',
                 'data': None,
                 'method': 'DELETE'
             }

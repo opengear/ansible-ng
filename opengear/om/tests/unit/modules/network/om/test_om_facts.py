@@ -37,8 +37,27 @@ class TestOmFactsModule(TestOmModule):
             ]
             return mock
 
+        def _setup_user_authorized_keys_mocks(self):
+            mock_users = patch(
+                "ansible_collections.opengear.om.plugins.module_utils.network.om."
+                "facts.user_authorized_keys.user_authorized_keys.UserAuthorizedKeysFacts.get_users"
+            )
+            mock_users.start().return_value = [
+                {'username': 'user1', 'id': 'users-1'}
+            ]
+
+            mock_keys = patch(
+                "ansible_collections.opengear.om.plugins.module_utils.network.om."
+                "facts.user_authorized_keys.user_authorized_keys.UserAuthorizedKeysFacts.get_device_data"
+            )
+            mock_keys.start().return_value = [
+                {'id': 'users_ssh_authorized_keys-1', 'key': 'ssh-rsa AAAA user1@laptop'}
+            ]
+            return mock_users, mock_keys
+
         self.mock_users = _setup_users_mocks(self)
         self.mock_groups = _setup_groups_mocks(self)
+        self.mock_uak_users, self.mock_uak_keys = _setup_user_authorized_keys_mocks(self)
 
         self.mock_connection = patch(
             "ansible_collections.opengear.om.plugins.module_utils.network.om."
@@ -50,6 +69,8 @@ class TestOmFactsModule(TestOmModule):
         super(TestOmFactsModule, self).tearDown()
         self.mock_users.stop()
         self.mock_groups.stop()
+        self.mock_uak_users.stop()
+        self.mock_uak_keys.stop()
         self.mock_connection.stop()
 
     def load_fixtures(self, commands=None):
@@ -71,6 +92,14 @@ class TestOmFactsModule(TestOmModule):
 
         self.assertIn('ansible_facts', result)
         self.assertIn('groups', result['ansible_facts']['ansible_network_resources'])
+
+    def test_om_facts_gather_user_authorized_keys(self):
+        """Facts module dispatches correctly to user_authorized_keys facts class"""
+        set_module_args({'gather_network_resources': ['user_authorized_keys']})
+        result = self.execute_module(changed=False)
+
+        self.assertIn('ansible_facts', result)
+        self.assertIn('ansible_network_resources', result['ansible_facts'])
 
     def test_om_facts_gather_multiple(self):
         """Facts module can gather multiple resources in a single call"""

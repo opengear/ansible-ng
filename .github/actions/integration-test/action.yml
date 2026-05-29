@@ -1,0 +1,58 @@
+name: Integration Tests
+description: Perform ansible-test network-integration which tests module against real devices
+
+inputs:
+  python-version:
+    required: true
+    type: string
+  collection:
+    required: true
+    type: string
+  inventory-file:
+    required: true
+    type: string
+
+runs:
+  using: 'composite'
+  steps:
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "${{ inputs.python-version }}"
+
+      - name: Create and activate clean virtual environment
+        shell: bash
+        run: |
+          python -m venv .venv
+          source .venv/bin/activate
+          pip install --upgrade pip
+
+      - name: Install ansible-core
+        shell: bash
+        run: pip install ansible-core
+
+      - name: Clean up previous Ansible collections
+        shell: bash
+        run: |
+          rm -rf ~/.ansible/collections
+
+      - name: Install dependencies
+        shell: bash
+        run: |
+          ansible-galaxy collection install ansible.netcommon:">=8.1.0" -p ~/.ansible/collections/
+
+      - name: Setup Opengear ansible_collections
+        shell: bash
+        run: |
+          mkdir -p ~/.ansible/collections/ansible_collections/opengear
+          cp -r opengear/${{ inputs.collection }} ~/.ansible/collections/ansible_collections/opengear
+          # cp ${{ inputs.inventory-file }} ~/.ansible/collections/ansible_collections/opengear/${{ inputs.collection }}/tests/integration/${{ inputs.inventory-file }}
+          find ~/.ansible/collections/ansible_collections/opengear/${{ inputs.collection }}/tests -type d
+
+      - name: Run integration tests
+        shell: bash
+        run: |
+          cd ~/.ansible/collections/ansible_collections/opengear/${{ inputs.collection }}
+          ansible-test network-integration \
+            --python ${{ inputs.python-version }} \
+            --inventory ${{ github.workspace }}/${{ inputs.inventory-file }}

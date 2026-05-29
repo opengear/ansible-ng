@@ -22,6 +22,7 @@ from ansible_collections.opengear.om.plugins.module_utils.network.om.utils.utils
     to_list,
     dict_diff,
     dict_merge,
+    is_subset,
     remove_empties,
 )
 from ansible_collections.opengear.om.plugins.module_utils.network.om.facts.facts import Facts
@@ -180,7 +181,7 @@ class Groups(ConfigBase):
             if group_id in id_group_map:
                 data = remove_empties(group)
                 data['id'] = group_id
-                if data == remove_empties(id_group_map[group_id]):
+                if is_subset(data, remove_empties(id_group_map[group_id])):
                     continue
             command = command_builder({'group': group}, 'groups/', group_id)
             if command:

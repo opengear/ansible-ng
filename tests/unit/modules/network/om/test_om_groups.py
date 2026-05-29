@@ -108,6 +108,7 @@ class TestOmGroupsModule(TestOmModule):
                         'enabled': True,
                         'access_rights': ['pmshell', 'web_ui'],
                         'ports': ['ports-1', 'ports-2', 'ports-6'],
+                        'members': [],
                         'role': 'ConsoleUser',
                         'mode': 'scoped',
                     }

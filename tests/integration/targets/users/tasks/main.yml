@@ -1,0 +1,354 @@
+---
+# Integration tests for users module
+# Assumes a factory reset device with default users:
+#   - root (enabled: true, groups: [admin], ssh_password_enabled: true)
+#
+# Test users use password that meets default complexity requirements
+
+# --- gathered ---
+- name: Gather users from device
+  opengear.ng.users:
+    state: gathered
+  register: result
+
+- name: Assert gathered returns default users
+  ansible.builtin.assert:
+    that:
+      - result.gathered | length == 1
+      - result.gathered | selectattr('username', 'equalto', 'root') | list | length == 1
+      - (result.gathered | selectattr('username', 'equalto', 'root') | first).enabled == true
+      - (result.gathered | selectattr('username', 'equalto', 'root') | first).ssh_password_enabled == true
+
+# --- merged: create ---
+- name: Test merged - create
+  block:
+    - name: Create a new user via merged
+      opengear.ng.users:
+        config:
+          - username: ansible-test
+            description: Created by Ansible integration test
+            enabled: true
+            password: "{{ test_user_password }}"
+            ssh_password_enabled: true
+            groups:
+              - netgrp
+        state: merged
+      register: result
+
+    - name: Assert user was created
+      ansible.builtin.assert:
+        that:
+          - result.changed == true
+
+    - name: Gather users and verify new user exists
+      opengear.ng.users:
+        state: gathered
+      register: result
+
+    - name: Assert new user is present with correct config
+      ansible.builtin.assert:
+        that:
+          - result.gathered | selectattr('username', 'equalto', 'ansible-test') | list | length == 1
+          - (result.gathered | selectattr('username', 'equalto', 'ansible-test') | first).enabled == true
+          - (result.gathered | selectattr('username', 'equalto', 'ansible-test') | first).ssh_password_enabled == true
+          - (result.gathered | selectattr('username', 'equalto', 'ansible-test') | first).groups == ['netgrp']
+
+  always:
+    - name: Cleanup - delete ansible-test user
+      opengear.ng.users:
+        config:
+          - username: ansible-test
+        state: deleted
+
+# --- merged: update ---
+- name: Test merged - update
+  block:
+    - name: Setup - create user to update
+      opengear.ng.users:
+        config:
+          - username: ansible-test
+            enabled: true
+            password: "{{ test_user_password }}"
+            ssh_password_enabled: true
+            groups:
+              - netgrp
+        state: merged
+
+    - name: Merge updated description
+      opengear.ng.users:
+        config:
+          - username: ansible-test
+            description: Updated by Ansible integration test
+        state: merged
+      register: result
+
+    - name: Assert user was changed
+      ansible.builtin.assert:
+        that:
+          - result.changed == true
+
+    - name: Gather and verify description was updated
+      opengear.ng.users:
+        state: gathered
+      register: result
+
+    - name: Assert description was updated and other fields preserved
+      ansible.builtin.assert:
+        that:
+          - (result.gathered | selectattr('username', 'equalto', 'ansible-test') | first).description == 'Updated by Ansible integration test'
+          - (result.gathered | selectattr('username', 'equalto', 'ansible-test') | first).enabled == true
+          - (result.gathered | selectattr('username', 'equalto', 'ansible-test') | first).groups == ['netgrp']
+
+  always:
+    - name: Cleanup - delete ansible-test user
+      opengear.ng.users:
+        config:
+          - username: ansible-test
+        state: deleted
+
+# --- merged: idempotent ---
+- name: Test merged - idempotent
+  block:
+    - name: Setup - create user
+      opengear.ng.users:
+        config:
+          - username: ansible-test
+            enabled: true
+            password: "{{ test_user_password }}"
+            ssh_password_enabled: true
+            groups:
+              - netgrp
+        state: merged
+
+    - name: Merge same config again
+      opengear.ng.users:
+        config:
+          - username: ansible-test
+            enabled: true
+            ssh_password_enabled: true
+            groups:
+              - netgrp
+        state: merged
+      register: result
+
+    - name: Assert no change
+      ansible.builtin.assert:
+        that:
+          - result.changed == false
+
+  always:
+    - name: Cleanup - delete ansible-test user
+      opengear.ng.users:
+        config:
+          - username: ansible-test
+        state: deleted
+
+# --- replaced ---
+- name: Test replaced
+  block:
+    - name: Setup - create user with multiple groups
+      opengear.ng.users:
+        config:
+          - username: ansible-test
+            enabled: true
+            password: "{{ test_user_password }}"
+            ssh_password_enabled: true
+            groups:
+              - netgrp
+              - admin
+        state: merged
+
+    - name: Replace user with fewer groups
+      opengear.ng.users:
+        config:
+          - username: ansible-test
+            enabled: true
+            password: "{{ test_user_password }}"
+            ssh_password_enabled: true
+            groups:
+              - netgrp
+        state: replaced
+      register: result
+
+    - name: Assert user was changed
+      ansible.builtin.assert:
+        that:
+          - result.changed == true
+
+    - name: Gather and verify only specified groups remain
+      opengear.ng.users:
+        state: gathered
+      register: result
+
+    - name: Assert groups were replaced not merged
+      ansible.builtin.assert:
+        that:
+          - (result.gathered | selectattr('username', 'equalto', 'ansible-test') | first).groups == ['netgrp']
+
+  always:
+    - name: Cleanup - delete ansible-test user
+      opengear.ng.users:
+        config:
+          - username: ansible-test
+        state: deleted
+
+# --- replaced: idempotent ---
+- name: Test replaced - idempotent
+  block:
+    - name: Setup - create user
+      opengear.ng.users:
+        config:
+          - username: ansible-test
+            enabled: true
+            password: "{{ test_user_password }}"
+            ssh_password_enabled: true
+            groups:
+              - netgrp
+        state: merged
+
+    - name: Replace with same config
+      opengear.ng.users:
+        config:
+          - username: ansible-test
+            enabled: true
+            ssh_password_enabled: true
+            groups:
+              - netgrp
+        state: replaced
+      register: result
+
+    - name: Assert no change
+      ansible.builtin.assert:
+        that:
+          - result.changed == false
+
+  always:
+    - name: Cleanup - delete ansible-test user
+      opengear.ng.users:
+        config:
+          - username: ansible-test
+        state: deleted
+
+# --- overridden ---
+- name: Test overridden
+  block:
+    - name: Setup - create extra user
+      opengear.ng.users:
+        config:
+          - username: ansible-test
+            enabled: true
+            password: "{{ test_user_password }}"
+            ssh_password_enabled: true
+            groups:
+              - netgrp
+        state: merged
+
+    - name: Override with only root user
+      opengear.ng.users:
+        config:
+          - username: root
+            enabled: true
+            ssh_password_enabled: true
+            groups:
+              - admin
+        state: overridden
+      register: result
+
+    - name: Assert changed
+      ansible.builtin.assert:
+        that:
+          - result.changed == true
+
+    - name: Gather and verify only root remains
+      opengear.ng.users:
+        state: gathered
+      register: result
+
+    - name: Assert ansible-test user was removed
+      ansible.builtin.assert:
+        that:
+          - result.gathered | length == 1
+          - result.gathered | selectattr('username', 'equalto', 'ansible-test') | list | length == 0
+
+  always:
+    - name: Cleanup - restore default state via overridden
+      opengear.ng.users:
+        config:
+          - username: root
+            enabled: true
+            ssh_password_enabled: true
+            groups:
+              - admin
+        state: overridden
+
+# --- deleted ---
+- name: Test deleted
+  block:
+    - name: Setup - create user to delete
+      opengear.ng.users:
+        config:
+          - username: ansible-test
+            enabled: true
+            password: "{{ test_user_password }}"
+            ssh_password_enabled: true
+            groups:
+              - netgrp
+        state: merged
+
+    - name: Delete user
+      opengear.ng.users:
+        config:
+          - username: ansible-test
+        state: deleted
+      register: result
+
+    - name: Assert changed
+      ansible.builtin.assert:
+        that:
+          - result.changed == true
+
+    - name: Gather and verify user is gone
+      opengear.ng.users:
+        state: gathered
+      register: result
+
+    - name: Assert user no longer exists
+      ansible.builtin.assert:
+        that:
+          - result.gathered | selectattr('username', 'equalto', 'ansible-test') | list | length == 0
+
+# --- deleted: idempotent ---
+- name: Delete non-existent user
+  opengear.ng.users:
+    config:
+      - username: ansible-test
+    state: deleted
+  register: result
+
+- name: Assert no change
+  ansible.builtin.assert:
+    that:
+      - result.changed == false
+
+# --- root cannot be deleted ---
+- name: Attempt to delete root user
+  opengear.ng.users:
+    config:
+      - username: root
+    state: deleted
+  register: result
+
+- name: Assert root was not deleted
+  ansible.builtin.assert:
+    that:
+      - result.changed == false
+
+- name: Gather and verify root still exists
+  opengear.ng.users:
+    state: gathered
+  register: result
+
+- name: Assert root is still present
+  ansible.builtin.assert:
+    that:
+      - result.gathered | selectattr('username', 'equalto', 'root') | list | length == 1

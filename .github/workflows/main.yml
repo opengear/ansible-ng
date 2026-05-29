@@ -75,8 +75,14 @@ jobs:
         with:
           fetch-depth: 0
 
+      - name: Skip version check
+        if: "!startsWith(github.ref, 'refs/heads/release/')"
+        run: echo "Version check skipped - only runs on release branches"
+
       - name: Run version check
         uses: ./.github/actions/version-check
+        if: |
+          (github.event_name == 'push' && startsWith(github.ref, 'refs/heads/release/'))
         with:
           collection: ${{ matrix.collection }}
 

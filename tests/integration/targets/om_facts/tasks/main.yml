@@ -1,0 +1,42 @@
+---
+# Integration tests for om_facts module
+# Verifies that gather_network_resources correctly dispatches to each facts class
+
+- name: Gather groups facts
+  opengear.om.om_facts:
+    gather_network_resources:
+      - groups
+  register: result
+
+- name: Assert groups were gathered
+  ansible.builtin.assert:
+    that:
+      - result.ansible_facts.ansible_network_resources.groups is defined
+      - result.ansible_facts.ansible_network_resources.groups | length > 0
+
+- name: Gather users facts
+  opengear.om.om_facts:
+    gather_network_resources:
+      - users
+  register: result
+
+- name: Assert users were gathered
+  ansible.builtin.assert:
+    that:
+      - result.ansible_facts.ansible_network_resources.users is defined
+      - result.ansible_facts.ansible_network_resources.users | length > 0
+
+- name: Gather multiple resources in one call
+  opengear.om.om_facts:
+    gather_network_resources:
+      - groups
+      - users
+  register: result
+
+- name: Assert both resources returned
+  ansible.builtin.assert:
+    that:
+      - result.ansible_facts.ansible_network_resources.groups is defined
+      - result.ansible_facts.ansible_network_resources.users is defined
+      - result.ansible_facts.ansible_network_resources.groups | length > 0
+      - result.ansible_facts.ansible_network_resources.users | length > 0

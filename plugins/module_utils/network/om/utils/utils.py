@@ -136,14 +136,14 @@ def dict_merge(base, other):
 
 
 def remove_empties(cfg_dict):
-    """Recursively remove keys with None, [], '', or {} values."""
+    """Recursively remove keys with None, '', or {} values. Empty lists are allowed."""
     result = {}
     for key, value in cfg_dict.items():
         if isinstance(value, dict):
             nested = remove_empties(value)
             if nested:
                 result[key] = nested
-        elif value not in (None, [], '', {}):
+        elif value not in (None, '', {}):
             result[key] = value
     return result
 

@@ -7,6 +7,13 @@ on:
       - main
       - develop/**
   pull_request:
+  workflow_dispatch:
+    inputs:
+      run_integration:
+        description: 'Run integration tests'
+        type: boolean
+        required: false
+        default: false
 
 jobs:
   lint:
@@ -72,3 +79,45 @@ jobs:
         uses: ./.github/actions/version-check
         with:
           collection: ${{ matrix.collection }}
+
+  integration-test:
+    name: Integration Tests
+    needs: [lint, sanity, unit-test]
+    runs-on: [self-hosted, ansible, integration-tests]
+    environment: integration-tests
+    # automatically run on main branch and release branches
+    # manual trigger with run_integration
+    if: |
+      (github.event_name == 'push' && github.ref == 'refs/heads/main') ||
+      (github.event_name == 'push' && github.ref == 'refs/heads/develop/project-cleanup') ||
+      (github.event_name == 'push' && startsWith(github.ref, 'refs/heads/release/')) ||
+      (github.event_name == 'workflow_dispatch' && inputs.run_integration)
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Build inventory
+        run: |
+          cat > inventory.networking << EOF
+          [opengear]
+          test-om ansible_host=${{ secrets.OM2200_DEVICE_HOST }} \
+                  ansible_user=${{ secrets.OM2200_DEVICE_USER }} \
+                  ansible_password=${{ secrets.OM2200_DEVICE_PASSWORD }}
+          [opengear:vars]
+          ansible_connection=httpapi
+          ansible_httpapi_use_ssl=true
+          ansible_httpapi_validate_certs=false
+          ansible_network_os=opengear.om.om
+          EOF
+
+      - name: Run integration tests
+        uses: ./.github/actions/integration-test
+        with:
+          python-version: "3.11"
+          collection: "om"
+          inventory-file: inventory.networking
+
+      - name: Cleanup inventory
+        if: always()
+        shell: bash
+        run: rm -f inventory.networking

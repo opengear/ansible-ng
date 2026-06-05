@@ -10,7 +10,7 @@
           - groups
       register: facts_result
 
-    - name: Show current groups
+    - name: Show groups facts
       debug:
         var: facts_result
 
@@ -29,11 +29,6 @@
               - ports-2
               - ports-5
         state: merged
-      register: group_result
-
-    - name: Show current group
-      debug:
-        var: group_result
 
     # Modify the group to add an extra port, merged with current groups config
     - name: Increase scope of operators group (merge)
@@ -43,11 +38,6 @@
             ports:
               - ports-6
         state: merged
-      register: group_result
-
-    - name: Show current group
-      debug:
-        var: group_result
 
     # Reduce the access of the group, set expected state with replace.
     - name: Reduce access for operators group
@@ -65,19 +55,9 @@
               - ports-5
             members: []
         state: replaced
-      register: group_result
-
-    - name: Show current group
-      debug:
-        var: group_result
 
     - name: Delete operators group
       opengear.ng.groups:
         config:
           - groupname: operators
         state: deleted
-      register: group_result
-
-    - name: Show current group
-      debug:
-        var: group_result

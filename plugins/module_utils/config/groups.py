@@ -9,6 +9,7 @@ from __future__ import absolute_import, division, print_function
 __metaclass__ = type
 
 from copy import deepcopy
+import json
 
 from ansible.module_utils.connection import ConnectionError
 
@@ -87,6 +88,20 @@ class Groups(ConfigBase):
                         if not exc.args[0].startswith('Expecting value:'):
                             raise exc
                         self.current_state.pop(group_id, None)
+            else:
+                # Simulate state changes for check mode + diff
+                for command in commands:
+                    if command['method'] == 'DELETE':
+                        group_id = command['path'].split('/')[-1]
+                        self.current_state.pop(group_id, None)
+                    elif command['method'] == 'PUT':
+                        group_id = command['path'].split('/')[-1]
+                        if group_id in self.current_state:
+                            self.current_state[group_id].update(command['data']['group'])
+                    elif command['method'] == 'POST':
+                        data = command['data']['group']
+                        temp_key = f"check-{data['groupname']}"
+                        self.current_state[temp_key] = data
             result['changed'] = True
 
         result['commands'] = commands
@@ -98,6 +113,36 @@ class Groups(ConfigBase):
             result['before'] = existing_groups_facts
             if result['changed']:
                 result['after'] = changed_groups_facts
+                if self._module._diff:
+                    diff_before = []
+                    diff_after = []
+
+                    # Build a lookup of existing groups by id
+                    existing_by_id = {g['id']: g for g in existing_groups_facts}
+
+                    for command in commands:
+                        if command['method'] == 'DELETE':
+                            group_id = command['path'].split('/')[-1]
+                            if group_id in existing_by_id:
+                                diff_before.append(existing_by_id[group_id])
+                                diff_after.append({})
+
+                        elif command['method'] == 'PUT':
+                            group_id = command['path'].split('/')[-1]
+                            if group_id in existing_by_id:
+                                before = existing_by_id[group_id]
+                                after = {**before, **command['data']['group']}
+                                diff_before.append(before)
+                                diff_after.append(after)
+
+                        elif command['method'] == 'POST':
+                            diff_before.append({})
+                            diff_after.append(command['data']['group'])
+
+                    result['diff'] = {
+                        'before': json.dumps(diff_before, indent=4) + '\n',
+                        'after': json.dumps(diff_after, indent=4) + '\n',
+                    }
         elif self.state == 'gathered':
             result['gathered'] = changed_groups_facts
 

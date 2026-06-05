@@ -72,6 +72,11 @@ options:
     - gathered
     - rendered
     default: merged
+notes:
+  - Diff output shows the expected configuration change based on the commands
+    generated. It does not reflect the actual device state after execution,
+    which may differ due to device-side normalization or concurrent changes.
+    Use state=gathered after a run to verify the actual device state.
 """
 
 EXAMPLES = """

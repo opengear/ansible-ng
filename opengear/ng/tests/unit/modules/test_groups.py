@@ -6,6 +6,8 @@ from __future__ import absolute_import, division, print_function
 
 __metaclass__ = type
 
+import json
+
 from ansible_collections.opengear.ng.tests.unit.compat.mock import patch
 from ansible_collections.opengear.ng.plugins.modules import groups
 from ansible_collections.opengear.ng.tests.unit.modules.utils import set_module_args
@@ -268,3 +270,282 @@ class TestGroupsModule(TestModuleBase):
         self.assertEqual(groups[0]['groupname'], 'admin')
         self.assertEqual(groups[1]['groupname'], 'netgrp')
         self.assertEqual(groups[2]['groupname'], 'ansible-test')
+
+    def test_groups_check_mode(self):
+        set_module_args({
+            '_ansible_check_mode': True,
+            'config': [
+                {
+                    'groupname': 'ansible-test',
+                    'access_rights': ['web_ui'],
+                    'ports': ['ports-6'],
+                }
+            ],
+            'state': 'merged',
+        })
+
+        result = self.execute_module(changed=True)
+        # Commands should be generated
+        self.assertEqual(len(result['commands']), 1)
+        # But connection should never have been called
+        self.connection.return_value.send_request.assert_not_called()
+
+    def test_groups_diff_merged_update(self):
+        set_module_args({
+            '_ansible_diff': True,
+            'config': [
+                {
+                    'groupname': 'ansible-test',
+                    'access_rights': ['web_ui'],
+                    'ports': ['ports-6'],
+                }
+            ],
+            'state': 'merged',
+        })
+
+        result = self.execute_module(changed=True)
+        self.assertIn('diff', result)
+        before = json.loads(result['diff']['before'])
+        after = json.loads(result['diff']['after'])
+        self.assertEqual(len(before), 1)
+        self.assertEqual(len(after), 1)
+        self.assertEqual(before[0]['groupname'], 'ansible-test')
+        self.assertEqual(after[0]['groupname'], 'ansible-test')
+        self.assertIn('web_ui', after[0]['access_rights'])
+        self.assertIn('ports-6', after[0]['ports'])
+
+    def test_groups_diff_deleted(self):
+        set_module_args({
+            '_ansible_diff': True,
+            'config': [
+                {'groupname': 'ansible-test'}
+            ],
+            'state': 'deleted',
+        })
+
+        result = self.execute_module(changed=True)
+        self.assertIn('diff', result)
+        before = json.loads(result['diff']['before'])
+        after = json.loads(result['diff']['after'])
+        self.assertEqual(len(before), 1)
+        self.assertEqual(before[0]['groupname'], 'ansible-test')
+        self.assertEqual(after[0], {})
+
+    def test_groups_diff_overridden(self):
+        set_module_args({
+            '_ansible_diff': True,
+            'config': [
+                {
+                    'groupname': 'admin',
+                    'description': 'Overridden groups, only admin remains',
+                    'enabled': True,
+                    'access_rights': ['admin'],
+                    'ports': [],
+                }
+            ],
+            'state': 'overridden',
+        })
+
+        result = self.execute_module(changed=True)
+        self.assertIn('diff', result)
+        before = json.loads(result['diff']['before'])
+        after = json.loads(result['diff']['after'])
+        # netgrp and ansible-test deleted, admin changed
+        self.assertEqual(len(before), 3)
+        self.assertEqual(len(after), 3)
+        deleted_groupnames = {g['groupname'] for g in before if g.get('groupname') not in
+                              {g.get('groupname') for g in after if g}}
+        self.assertIn('netgrp', deleted_groupnames)
+        self.assertIn('ansible-test', deleted_groupnames)
+
+    def test_groups_no_diff_when_not_requested(self):
+        set_module_args({
+            'config': [
+                {
+                    'groupname': 'ansible-test',
+                    'access_rights': ['web_ui'],
+                }
+            ],
+            'state': 'merged',
+        })
+
+        result = self.execute_module(changed=True)
+        self.assertNotIn('diff', result)
+
+    def test_groups_no_diff_when_idempotent(self):
+        set_module_args({
+            '_ansible_diff': True,
+            'config': [
+                {
+                    'groupname': 'admin',
+                    'description': 'Provides users with unlimited configuration and management privileges',
+                    'enabled': True,
+                    'access_rights': ['admin'],
+                }
+            ],
+            'state': 'merged',
+        })
+
+        result = self.execute_module(changed=False)
+        self.assertNotIn('diff', result)
+
+    def test_groups_check_mode_with_diff_merged(self):
+        set_module_args({
+            '_ansible_check_mode': True,
+            '_ansible_diff': True,
+            'config': [
+                {
+                    'groupname': 'ansible-test',
+                    'access_rights': ['web_ui'],
+                    'ports': ['ports-6'],
+                }
+            ],
+            'state': 'merged',
+        })
+
+        result = self.execute_module(changed=True)
+
+        # Commands should be generated but not sent
+        self.assertEqual(len(result['commands']), 1)
+        self.connection.return_value.send_request.assert_not_called()
+
+        # Diff should show simulated after state
+        self.assertIn('diff', result)
+        before = json.loads(result['diff']['before'])
+        after = json.loads(result['diff']['after'])
+        self.assertEqual(len(before), 1)
+        self.assertEqual(len(after), 1)
+        self.assertEqual(before[0]['groupname'], 'ansible-test')
+        self.assertEqual(after[0]['groupname'], 'ansible-test')
+        self.assertIn('web_ui', after[0]['access_rights'])
+        self.assertIn('ports-6', after[0]['ports'])
+        # Verify before does not have the new values
+        self.assertNotIn('web_ui', before[0]['access_rights'])
+        self.assertNotIn('ports-6', before[0]['ports'])
+
+    def test_groups_check_mode_with_diff_replaced(self):
+        set_module_args({
+            '_ansible_check_mode': True,
+            '_ansible_diff': True,
+            'config': [
+                {
+                    'groupname': 'ansible-test',
+                    'description': 'Test group',
+                    'enabled': True,
+                    'access_rights': ['web_ui'],
+                    'ports': ['ports-1'],
+                }
+            ],
+            'state': 'replaced',
+        })
+
+        result = self.execute_module(changed=True)
+
+        # Commands should be generated but not sent
+        self.assertEqual(len(result['commands']), 1)
+        self.connection.return_value.send_request.assert_not_called()
+
+        # Diff should show simulated after state
+        self.assertIn('diff', result)
+        before = json.loads(result['diff']['before'])
+        after = json.loads(result['diff']['after'])
+        self.assertEqual(len(before), 1)
+        self.assertEqual(len(after), 1)
+        self.assertEqual(before[0]['groupname'], 'ansible-test')
+        self.assertEqual(after[0]['groupname'], 'ansible-test')
+        # access_rights replaced - pmshell gone, web_ui added
+        self.assertNotIn('pmshell', after[0]['access_rights'])
+        self.assertIn('web_ui', after[0]['access_rights'])
+        # ports replaced - ports-2 gone, only ports-1 remains
+        self.assertNotIn('ports-2', after[0]['ports'])
+        self.assertEqual(after[0]['ports'], ['ports-1'])
+
+    def test_groups_check_mode_with_diff_overridden(self):
+        set_module_args({
+            '_ansible_check_mode': True,
+            '_ansible_diff': True,
+            'config': [
+                {
+                    'groupname': 'admin',
+                    'description': 'Overridden groups, only admin remains',
+                    'enabled': True,
+                    'access_rights': ['admin'],
+                    'ports': [],
+                }
+            ],
+            'state': 'overridden',
+        })
+
+        result = self.execute_module(changed=True)
+
+        # Commands should be generated but not sent
+        self.assertEqual(len(result['commands']), 3)
+        self.connection.return_value.send_request.assert_not_called()
+
+        # Diff should show simulated after state
+        self.assertIn('diff', result)
+        before = json.loads(result['diff']['before'])
+        after = json.loads(result['diff']['after'])
+        self.assertEqual(len(before), 3)
+        self.assertEqual(len(after), 3)
+        deleted_groupnames = {g['groupname'] for g in before if g.get('groupname') not in
+                              {g.get('groupname') for g in after if g}}
+        self.assertIn('netgrp', deleted_groupnames)
+        self.assertIn('ansible-test', deleted_groupnames)
+
+    def test_groups_check_mode_with_diff_deleted(self):
+        set_module_args({
+            '_ansible_check_mode': True,
+            '_ansible_diff': True,
+            'config': [
+                {'groupname': 'ansible-test'}
+            ],
+            'state': 'deleted',
+        })
+
+        result = self.execute_module(changed=True)
+
+        # Commands should be generated but not sent
+        self.assertEqual(len(result['commands']), 1)
+        self.connection.return_value.send_request.assert_not_called()
+
+        # Diff should show simulated after state
+        self.assertIn('diff', result)
+        before = json.loads(result['diff']['before'])
+        after = json.loads(result['diff']['after'])
+        self.assertEqual(len(before), 1)
+        self.assertEqual(before[0]['groupname'], 'ansible-test')
+        self.assertEqual(after[0], {})
+
+    def test_groups_check_mode_with_diff_overridden(self):
+        set_module_args({
+            '_ansible_check_mode': True,
+            '_ansible_diff': True,
+            'config': [
+                {
+                    'groupname': 'admin',
+                    'description': 'Overridden groups, only admin remains',
+                    'enabled': True,
+                    'access_rights': ['admin'],
+                    'ports': [],
+                }
+            ],
+            'state': 'overridden',
+        })
+
+        result = self.execute_module(changed=True)
+
+        # Commands should be generated but not sent
+        self.assertEqual(len(result['commands']), 3)
+        self.connection.return_value.send_request.assert_not_called()
+
+        # Diff should show simulated after state
+        self.assertIn('diff', result)
+        before = json.loads(result['diff']['before'])
+        after = json.loads(result['diff']['after'])
+        self.assertEqual(len(before), 3)
+        self.assertEqual(len(after), 3)
+        deleted_groupnames = {g['groupname'] for g in before if g.get('groupname') not in
+                              {g.get('groupname') for g in after if g}}
+        self.assertIn('netgrp', deleted_groupnames)
+        self.assertIn('ansible-test', deleted_groupnames)

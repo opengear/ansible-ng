@@ -21,13 +21,13 @@ runs:
       - name: Setup ansible_collections
         shell: bash
         run: |
-          mkdir -p ~/.ansible/collections/ansible_collections/opengear/om
+          mkdir -p ~/.ansible/collections/ansible_collections/opengear/ng
           rsync -a --exclude='.git' --exclude='.github' --exclude='.venv' \
-            ./ ~/.ansible/collections/ansible_collections/opengear/om/
-          find ~/.ansible/collections/ansible_collections/opengear/om/tests -type d
+            ./ ~/.ansible/collections/ansible_collections/opengear/ng/
+          find ~/.ansible/collections/ansible_collections/opengear/ng/tests -type d
 
       - name: Run unit tests
         shell: bash
         run: |
-          cd ~/.ansible/collections/ansible_collections/opengear/om
+          cd ~/.ansible/collections/ansible_collections/opengear/ng
           ansible-test units --docker --requirements --python ${{ inputs.python-version }}

@@ -27,16 +27,16 @@ runs:
           echo "New version:      $NEW"
 
           if [ "$OLD" = "" ]; then
-            echo "Warning: opengear.om does not have version in target branch."
+            echo "Warning: opengear.ng does not have version in target branch."
           fi
 
           if [ "$NEW" = "" ]; then
-            echo "Error: opengear.om does not have version in galaxy.yml."
+            echo "Error: opengear.ng does not have version in galaxy.yml."
             exit 1
           fi
 
           if [ "$OLD" = "$NEW" ]; then
-            echo "::error::opengear.om was modified but \
+            echo "::error::opengear.ng was modified but \
               galaxy.yml version was not bumped (still $OLD)"
             exit 1
           fi

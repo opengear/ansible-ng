@@ -1,91 +1,130 @@
-# Opengear OM Collection
+# Opengear NG Ansible Collection
 
-The Ansible Opengear OM collection includes a variety of Ansible content to help automate the management of Opengear OM network appliances.
+The Opengear NG Collection includes a variety of Ansible content to help
+automate the management of Opengear network appliances.
 
-### Supported connections
-The Ansible OM collection supports ``httpapi``  connections.
+![Main CI Status][main-ci-status]
 
-## Included content
+## Supported Products
+The Opengear NG collection supports the following Opengear product families:
 
-<!--start collection content-->
-### HTTPAPI plugins
-Name | Description
---- | ---
-opengear.om.om|Use Opengear REST API to run request on Opengear OM device
+- OM12xx
+- OM13xx
+- OM22xx
+- CM80xx
+- CM81xx
 
-### Modules
-Name | Description
---- | ---
-opengear.om.om_auth|Configure remote authentication, authorization, accounting (AAA) servers.
-opengear.om.om_conns|Read and manipulate the network connections on the Operations Manager appliance.
-opengear.om.om_facts|Collect facts from OM devices
-opengear.om.om_failover|Failover endpoint is to check failover status and retrieve / change failover settings.
-opengear.om.om_groups|Retrieve or update group information.
-opengear.om.om_pdu|Configure, monitor and control PDUs connected to the device.
-opengear.om.om_physifs|Read and manipulate the network physical interfaces on the Operations Manager appliance.
-opengear.om.om_ports|Configuring and viewing ports information
-opengear.om.om_services|Used for working with the properties of the various services running on the system.
-opengear.om.om_static_routes|Configuring and viewing static routes
-opengear.om.om_system|Used for configuring and accessing information about the Operations Manager appliance itself.
-opengear.om.om_users|Retrieve and update user information.
+## Connections
+Modules in this collection use the Ansible `httpapi` connection plugin by default
+to communicate with Opengear devices via the REST API.
 
-<!--end collection content-->
-## Installing this collection
+## Modules
+| Name                      | Description                                                                                          |
+| ------------------------- | ---------------------------------------------------------------------------------------------------- |
+| opengear.ng.auth          | Manage remote authentication, authorization, and accounting (AAA) configuration.                     |
+| opengear.ng.conns         | Manage network connection configuration.                                                             |
+| opengear.ng.facts         | Gather device information and network resource configuration facts.                                  |
+| opengear.ng.failover      | Manage failover configuration and retrieve failover status.                                          |
+| opengear.ng.groups        | Manage user group configuration.                                                                     |
+| opengear.ng.pdu           | Manage PDUs connected to the device, including configuration, monitoring, and control.               |
+| opengear.ng.physifs       | Manage physical network interface configuration.                                                     |
+| opengear.ng.ports         | Manage serial port configuration.                                                                    |
+| opengear.ng.services      | Manage system service configuration.                                                                 |
+| opengear.ng.static_routes | Manage static route configuration.                                                                   |
+| opengear.ng.system        | Manage device system configuration and retrieve device information.                                  |
+| opengear.ng.users         | Manage user configuration.                                                                           |
 
-You can install the Opengear OM collection with the Ansible Galaxy CLI:
+## Installing The Collection
 
-    ansible-galaxy collection install opengear.om
-
-You can also include it in a `requirements.yml` file and install it with `ansible-galaxy collection install -r requirements.yml`, using the format:
+You can install the latest release of this collection with the Ansible Galaxy CLI:
+```
+ansible-galaxy collection install opengear.ng
+```
+You can also include it in a `requirements.yml` file and install it with
+`ansible-galaxy collection install -r requirements.yml`, using the format:
 
 ```yaml
 ---
 collections:
-  - name: opengear.om
+  - name: opengear.ng
 ```
 
-Alternatively you can install the Opengear OM collection directly from Github:
+> **Developers:** See [CONTRIBUTING.md](CONTRIBUTING.md) for local development installation instructions.
 
-    ansible-galaxy collection install git+https://github.com/opengear/opengear.om.git
 
-## Using this collection
-
+## Using NG Collection
 
 This collection includes [network resource modules](https://docs.ansible.com/ansible/latest/network/user_guide/network_resource_modules.html).
 
-### Using modules from the Opengear OM collection in your playbooks
+### Authentication
 
-You can call modules by their Fully Qualified Collection Namespace (FQCN), such as `opengear.om.om_users`.
-The following example task replaces configuration changes in the existing configuration on a Opengear OM network device, using the FQCN:
+This collection uses the Ansible `httpapi` connection plugin for authentication.
+
+Authentication is handled by the Opengear REST API using standard Ansible connection variables.
+
+### Inventory Example
+
+To connect to an Opengear device, define hosts in `inventory.yml`.
+
+```yaml
+all:
+  children:
+    opengear:
+      hosts:
+        my-device:
+          ansible_host: 192.168.1.1
+      vars:
+        ansible_connection: httpapi
+        ansible_network_os: opengear.ng.http_api  # required - httpapi plugin to use for this collection
+        ansible_httpapi_use_ssl: true
+        ansible_httpapi_validate_certs: false
+        ansible_user: "{{ opengear_user }}"
+        ansible_password: "{{ opengear_password }}"
+```
+
+### Playbook Example
+
+You can call modules by their Fully Qualified Collection Namespace (FQCN) such
+as `opengear.ng.users`.
+
+The following example task replaces configuration for an entity in the existing
+configuration of an Opengear network device, using the FQCN:
 
 ```yaml
 ---
-  - name: Replace device configuration of users.
-    openear.om.om_users:
-      config:
-        - name: user1
-          enabled: true
-          no_password: true
-          groups:
-          - group2
-      state: replaced
+- name: Example playbook for managing groups
+  hosts: opengear
+  gather_facts: false
 
+  tasks:
+    - name: Replace device configuration of group1.
+      opengear.ng.groups:
+        config:
+          - name: group1
+            enabled: true
+            description: This is an example group
+            members: []
+            access_rights: ['web_ui', 'pmshell']
+            ports: ['port-1','port-2']
+        state: replaced
 ```
 
-### See Also:
+### Further Examples
 
-* [Ansible Using collections](https://docs.ansible.com/ansible/latest/user_guide/collections_using.html) for more details.
+For more examples of opengear.ng module usage, see [Examples](examples/).
 
-## Contributing to this collection
+For general Ansible collection usage, see [Using Ansible Collections](https://docs.ansible.com/ansible/latest/user_guide/collections_using.html).
 
-We welcome community contributions to this collection. If you find problems, please open an issue or create a PR against the [Opengear OM collection repository](https://github.com/opengear/opengear.om). 
+## Contributing
 
-See the [Ansible Community Guide](https://docs.ansible.com/ansible/latest/community/index.html) for details on contributing to Ansible.
+Contributions are welcome! Please read our [Contributing Guide](CONTRIBUTING.md)
+before submitting a pull request.
 
 ### Code of Conduct
-This collection follows the Ansible project's
-[Code of Conduct](https://docs.ansible.com/ansible/devel/community/code_of_conduct.html).
+This collection follows the Ansible project's [Code of Conduct][].
 Please read and familiarize yourself with this document.
+
+[Code of Conduct]: https://docs.ansible.com/ansible/devel/community/code_of_conduct.html
 
 ## More information
 
@@ -94,10 +133,12 @@ Please read and familiarize yourself with this document.
 - [Ansible User guide](https://docs.ansible.com/ansible/latest/user_guide/index.html)
 - [Ansible Developer guide](https://docs.ansible.com/ansible/latest/dev_guide/index.html)
 - [Ansible Community code of conduct](https://docs.ansible.com/ansible/latest/community/code_of_conduct.html)
-- [Opengear OM REST API](https://ftp.opengear.com/download/api/operations_manager/og-rest-api-specification-v2-ngcs.html)
+- [Opengear OM REST API](https://ftp.opengear.com/download/opengear_appliances/OM/OM2200/current/documentation/og-rest-api-specification-v2-ngcs.html)
 
 ## Licensing
 
 GNU General Public License v3.0 or later.
 
 See [LICENSE](https://www.gnu.org/licenses/gpl-3.0.txt) to see the full text.
+
+[main-ci-status]: https://img.shields.io/github/actions/workflow/status/opengear/ansible-ng/.github%2Fworkflows%2Fmain.yml?branch=main

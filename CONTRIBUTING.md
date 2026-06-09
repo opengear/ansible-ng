@@ -69,24 +69,24 @@ Each commit message should follow this structure:
 **Example — a well-structured branch:**
 
 ~~~
-feat(om_ntp): add ntp module for OM device configuration
+feat(ng/ntp): add ntp module for device configuration
 
 Implements get/set NTP server configuration via the REST API.
 Supports multiple NTP servers and authentication.
 
 ---
 
-test(om_ntp): add unit tests for ntp module
+test(ng/ntp): add unit tests for ntp module
 
 Covers server list retrieval, single/multi-server set,
 and error handling for unreachable NTP hosts.
 
 ---
 
-docs(om_ntp): add ntp module example playbook
+docs(ng/ntp): add ntp module example playbook
 
-Shows basic NTP configuration for a fleet of OM devices
-using the new opengear.om.ntp module.
+Shows basic NTP configuration for a fleet of devices
+using the new opengear.ng.ntp module.
 ~~~
 
 Before opening a pull request, review your branch with:

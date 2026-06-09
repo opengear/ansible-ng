@@ -5,7 +5,8 @@ on:
   push:
     branches:
       - main
-      - develop/**
+      - feature/**
+      - release/**
   pull_request:
   workflow_dispatch:
     inputs:
@@ -83,7 +84,6 @@ jobs:
     # manual trigger with run_integration
     if: |
       (github.event_name == 'push' && github.ref == 'refs/heads/main') ||
-      (github.event_name == 'push' && github.ref == 'refs/heads/develop/project-cleanup') ||
       (github.event_name == 'push' && startsWith(github.ref, 'refs/heads/release/')) ||
       (github.event_name == 'workflow_dispatch' && inputs.run_integration)
     steps:
@@ -99,9 +99,9 @@ jobs:
                   ansible_password=${{ secrets.OM2200_DEVICE_PASSWORD }}
           [opengear:vars]
           ansible_connection=httpapi
+          ansible_network_os=opengear.ng.http_api
           ansible_httpapi_use_ssl=true
           ansible_httpapi_validate_certs=false
-          ansible_network_os=opengear.om.om
           EOF
 
       - name: Run integration tests

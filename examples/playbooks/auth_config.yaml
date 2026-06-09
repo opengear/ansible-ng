@@ -5,7 +5,7 @@
   connection: httpapi
   tasks:
     - name: Change Auth
-      opengear.om.om_auth:
+      opengear.ng.auth:
         config:
           mode: local
         state: merged

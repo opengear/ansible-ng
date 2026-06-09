@@ -5,18 +5,18 @@
   connection: httpapi
   tasks:
     - name: Change Admin Infro
-      opengear.om.om_system:
+      opengear.ng.system:
         config:
           admin_info:
             hostname: om1000
             contact: avankatw@digi.com.au
             location: AUS
     - name: Change Timezone
-      opengear.om.om_system:
+      opengear.ng.system:
         config:
           timezone: Australia/Brisbane
     - name: Add SSH Keys
-      opengear.om.om_system:
+      opengear.ng.system:
         config:
           system_authorized_keys:
             - key: "{{ 'rsa key' }}"

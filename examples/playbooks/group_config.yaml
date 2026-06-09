@@ -5,7 +5,7 @@
 
   tasks:
     - name: Gather groups facts
-      opengear.om.om_facts:
+      opengear.ng.facts:
         gather_network_resources:
           - groups
       register: facts_result
@@ -16,7 +16,7 @@
 
     # Create a new group, the new group is merged with current groups config
     - name: Create operators group
-      opengear.om.om_groups:
+      opengear.ng.groups:
         config:
           - groupname: operators
             description: Regular operator access [Managed by Ansible]
@@ -37,7 +37,7 @@
 
     # Modify the group to add an extra port, merged with current groups config
     - name: Increase scope of operators group (merge)
-      opengear.om.om_groups:
+      opengear.ng.groups:
         config:
           - groupname: operators
             ports:
@@ -51,7 +51,7 @@
 
     # Reduce the access of the group, set expected state with replace.
     - name: Reduce access for operators group
-      opengear.om.om_groups:
+      opengear.ng.groups:
         config:
           - groupname: operators
             description: Regular operator access [Managed by Ansible]
@@ -72,7 +72,7 @@
         var: group_result
 
     - name: Delete operators group
-      opengear.om.om_groups:
+      opengear.ng.groups:
         config:
           - groupname: operators
         state: deleted

@@ -6,7 +6,7 @@
   gather_facts: false
   tasks:
     - name: Add conn
-      opengear.om.om_conns:
+      opengear.ng.conns:
         config:
           - name: default-conn-1
             mode: static

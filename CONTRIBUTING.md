@@ -8,16 +8,16 @@ a high quality, readable project history.
 1. Fork the repository on GitHub
 2. Clone your fork locally:
    ~~~bash
-   git clone https://github.com/<your-username>/opengear-ansible-collections.git
+   git clone https://github.com/<your-username>/ansible-collections.git opengear-ansible-collections
    cd opengear-ansible-collections
    ~~~
 3. Add the upstream remote so you can keep your fork up to date:
    ~~~bash
-   git remote add upstream https://github.com/opengear/opengear-ansible-collections.git
+   git remote add upstream https://github.com/opengear/ansible-collections.git
    ~~~
 4. Create a development branch from `main`:
    ~~~bash
-   git checkout -b feature/om-add-ntp-module
+   git checkout -b feature/ng-add-ntp-module
    ~~~
 
 ## Keeping Your Fork Updated

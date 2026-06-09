@@ -14,13 +14,17 @@ runs:
         with:
           python-version: ${{ inputs.python-version }}
 
-      - name: Install dependencies
+      - name: Install ansible
         shell: bash
         run: pip install ansible-core ansible-lint
 
-      - name: Lint opengear.om
+      - name: Install collection
         shell: bash
-        run: ansible-lint opengear/om
+        run: ansible-galaxy collection install opengear/ng/ --force
+
+      - name: Lint opengear.ng
+        shell: bash
+        run: ansible-lint opengear/ng
 
       # - name: Lint examples
       #   shell: bash

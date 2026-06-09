@@ -6,7 +6,7 @@
   gather_facts: false
   tasks:
     - name: Delete groups
-      opengear.om.om_groups:
+      opengear.ng.groups:
         config:
           - groupname: test5
           - groupname: test4

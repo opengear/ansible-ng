@@ -6,7 +6,7 @@
   gather_facts: false
   tasks:
     - name: Delete user
-      opengear.om.om_users:
+      opengear.ng.users:
         config:
           - username: test3
           - username: test1

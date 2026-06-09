@@ -5,7 +5,7 @@
   connection: httpapi
   tasks:
     - name: Add Google NTP server
-      opengear.om.om_services:
+      opengear.ng.services:
         config:
           ntp:
             enabled: true

@@ -6,7 +6,7 @@
   gather_facts: true
   tasks:
     - name: Add user
-      opengear.om.om_users:
+      opengear.ng.users:
         config:
           - username: test1
             enabled: false

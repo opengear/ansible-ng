@@ -5,7 +5,7 @@
   connection: httpapi
   tasks:
     - name: Add physif
-      opengear.om.om_physifs:
+      opengear.ng.physifs:
         config:
           - name: init_net1
             enabled: true

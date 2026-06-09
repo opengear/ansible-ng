@@ -6,11 +6,11 @@
   gather_facts: true
   tasks:
     - name: Get port info
-      opengear.om.om_facts:
+      opengear.ng.facts:
         gather_subset: min
         gather_network_resources: ports
     - name: Modify ports
-      opengear.om.om_ports:
+      opengear.ng.ports:
         config:
           ports:
             - id: "{{ item.id }}"

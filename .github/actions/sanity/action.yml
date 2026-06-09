@@ -27,5 +27,5 @@ runs:
         shell: bash
         env:
           ansible_collections: "/home/runner/.ansible/collections/ansible_collections"
-        working-directory: ${{ env.ansible_collections }}/opengear/om
+        working-directory: ${{ env.ansible_collections }}/opengear/ng
         run: ansible-test sanity --docker --python ${{ inputs.python-version }}

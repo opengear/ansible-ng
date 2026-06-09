@@ -1,26 +1,19 @@
 namespace: opengear
-name: om
-version: 1.0.5
+name: ng
+version: 1.0.0
 readme: README.md
 authors:
   - Opengear <software@opengear.com>
-description: Ansible Network Collection for Opengear OM & CM8100 devices.
+description: Ansible modules for managing Opengear console servers and out-of-band management devices.
 license:
   - GPL-3.0-or-later
-tags: [opengear, om, restapi, networking, automation]
+tags: [opengear, ng, restapi, networking, automation]
 dependencies:
   "ansible.netcommon": ">=8.1.0"
-repository: https://github.com/opengear/opengear.om
-
-# TODO online documentation would be nice.
-# documentation: http://docs.example.com
-
-# The URL to the homepage of the collection/project
-# homepage: http://example.com
-
-# The URL to the collection issue tracker
-# issues: http://example.com/issue/tracker
+repository: https://github.com/opengear/ansible-ng
+documentation: https://github.com/opengear/ansible-ng
+homepage: https://github.com/opengear/ansible-ng
+issues: https://github.com/opengear/ansible-ng/issues
 
 build_ignore:
-  - tests/unit
-  - tests/integration
+  - tests/

@@ -31,7 +31,7 @@ jobs:
     strategy:
       matrix:
         collection:
-          - om
+          - ng
         python:
           - "3.10"
           - "3.11"
@@ -50,7 +50,7 @@ jobs:
       fail-fast: false
       matrix:
         collection:
-          - om
+          - ng
         python:
           - "3.10"
           - "3.11"
@@ -68,7 +68,7 @@ jobs:
     strategy:
       matrix:
         collection:
-          - om
+          - ng
     name: "Version check: ${{ matrix.collection }}"
     steps:
       - uses: actions/checkout@v4
@@ -111,16 +111,16 @@ jobs:
                   ansible_password=${{ secrets.OM2200_DEVICE_PASSWORD }}
           [opengear:vars]
           ansible_connection=httpapi
+          ansible_network_os=opengear.ng.http_api
           ansible_httpapi_use_ssl=true
           ansible_httpapi_validate_certs=false
-          ansible_network_os=opengear.om.om
           EOF
 
       - name: Run integration tests
         uses: ./.github/actions/integration-test
         with:
           python-version: "3.11"
-          collection: "om"
+          collection: "ng"
           inventory-file: inventory.networking
 
       - name: Cleanup inventory

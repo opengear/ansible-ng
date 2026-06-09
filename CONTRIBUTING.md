@@ -8,16 +8,16 @@ a high quality, readable project history.
 1. Fork the repository on GitHub
 2. Clone your fork locally:
    ~~~bash
-   git clone https://github.com/<your-username>/opengear-ansible-collections.git
-   cd opengear-ansible-collections
+   git clone https://github.com/<your-username>/ansible-ng.git
+   cd ansible-ng
    ~~~
 3. Add the upstream remote so you can keep your fork up to date:
    ~~~bash
-   git remote add upstream https://github.com/opengear/opengear-ansible-collections.git
+   git remote add upstream https://github.com/opengear/ansible-ng.git
    ~~~
 4. Create a development branch from `main`:
    ~~~bash
-   git checkout -b feature/om-add-ntp-module
+   git checkout -b feature/add-ntp-module
    ~~~
 
 ## Keeping Your Fork Updated
@@ -29,13 +29,33 @@ git fetch upstream
 git rebase upstream/main
 ~~~
 
+## Local Installation
+
+To install the collection from the source repository:
+```
+git clone https://github.com/opengear/ansible-ng.git
+cd ansible-ng
+ansible-galaxy collection install . --force
+```
+
+Alternatively, symlink the local source to Ansible collections path:
+```
+git clone https://github.com/opengear/ansible-ng.git
+cd ansible-ng
+
+mkdir -p ~/.ansible/collections/ansible_collections/opengear
+ln -s /path/to/ansible-ng \
+      ~/.ansible/collections/ansible_collections/opengear/ng
+```
+Development changes will be picked up automatically.
+
 ## Configuration
 
 No `ansible.cfg` is provided. A typical development setup for working with
 this repo locally:
 ```
 [defaults]
-collections_path = /path/to/opengear-ansible-collections:~/.ansible/collections
+collections_path = ~/.ansible/collections
 host_key_checking = False
 stdout_callback = yaml
 
@@ -69,21 +89,21 @@ Each commit message should follow this structure:
 **Example — a well-structured branch:**
 
 ~~~
-feat(ng/ntp): add ntp module for device configuration
+feat(ntp): add ntp module for device configuration
 
 Implements get/set NTP server configuration via the REST API.
 Supports multiple NTP servers and authentication.
 
 ---
 
-test(ng/ntp): add unit tests for ntp module
+test(ntp): add unit tests for ntp module
 
 Covers server list retrieval, single/multi-server set,
 and error handling for unreachable NTP hosts.
 
 ---
 
-docs(ng/ntp): add ntp module example playbook
+docs(ntp): add ntp module example playbook
 
 Shows basic NTP configuration for a fleet of devices
 using the new opengear.ng.ntp module.

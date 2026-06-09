@@ -1,0 +1,25 @@
+namespace: opengear
+name: ng
+version: 1.0.0
+readme: README.md
+authors:
+  - Opengear <software@opengear.com>
+description: Ansible modules for managing Opengear console servers and out-of-band management devices.
+license:
+  - GPL-3.0-or-later
+tags: [opengear, ng, restapi, networking, automation]
+dependencies:
+  "ansible.netcommon": ">=8.1.0"
+repository: https://github.com/opengear/ansible-collections
+
+# TODO online documentation would be nice.
+# documentation: http://docs.example.com
+
+# The URL to the homepage of the collection/project
+# homepage: http://example.com
+
+# The URL to the collection issue tracker
+# issues: http://example.com/issue/tracker
+
+build_ignore:
+  - tests/

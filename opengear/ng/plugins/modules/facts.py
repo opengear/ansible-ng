@@ -98,7 +98,9 @@ def main():
     ansible_facts, additional_warnings = result
     warnings.extend(additional_warnings)
 
-    module.exit_json(ansible_facts=ansible_facts, warnings=warnings)
+    for warning in warnings:
+        module.warn(warning)
+    module.exit_json(ansible_facts=ansible_facts)
 
 
 if __name__ == '__main__':

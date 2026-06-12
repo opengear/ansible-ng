@@ -136,6 +136,8 @@ def main():
                            supports_check_mode=True)
 
     result = Users(module).execute_module()
+    for warning in result.pop('warnings', []):
+        module.warn(warning)
     module.exit_json(**result)
 
 

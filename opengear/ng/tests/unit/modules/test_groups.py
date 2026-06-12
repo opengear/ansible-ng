@@ -235,11 +235,11 @@ class TestGroupsModule(TestModuleBase):
             'state': 'merged',
         })
 
-        result = self.execute_module(changed=True)
-        self.assertIn(
-            "The 'role' field is deprecated since 2022/08. Use 'access_rights' instead.",
-            result['warnings']
-        )
+        with patch('ansible.module_utils.basic.AnsibleModule.warn') as mock_warn:
+            self.execute_module(changed=True)
+            mock_warn.assert_called_once_with(
+                "The 'role' field is deprecated since 2022/08. Use 'access_rights' instead."
+            )
 
     def test_groups_rendered(self):
         set_module_args({

@@ -22,6 +22,7 @@ class FactsArgs(object):  # pylint: disable=R0903
         "auth",
         "conns",
         "failover",
+        "firmware_upgrade",
         "groups",
         "physifs",
         "ports",

@@ -19,20 +19,21 @@ Modules in this collection use the Ansible `httpapi` connection plugin by defaul
 to communicate with Opengear devices via the REST API.
 
 ## Modules
-| Name                      | Description                                                                                          |
-| ------------------------- | ---------------------------------------------------------------------------------------------------- |
-| opengear.ng.auth          | Manage remote authentication, authorization, and accounting (AAA) configuration.                     |
-| opengear.ng.conns         | Manage network connection configuration.                                                             |
-| opengear.ng.facts         | Gather device information and network resource configuration facts.                                  |
-| opengear.ng.failover      | Manage failover configuration and retrieve failover status.                                          |
-| opengear.ng.groups        | Manage user group configuration.                                                                     |
-| opengear.ng.pdu           | Manage PDUs connected to the device, including configuration, monitoring, and control.               |
-| opengear.ng.physifs       | Manage physical network interface configuration.                                                     |
-| opengear.ng.ports         | Manage serial port configuration.                                                                    |
-| opengear.ng.services      | Manage system service configuration.                                                                 |
-| opengear.ng.static_routes | Manage static route configuration.                                                                   |
-| opengear.ng.system        | Manage device system configuration and retrieve device information.                                  |
-| opengear.ng.users         | Manage user configuration.                                                                           |
+| Name                         | Description                                                                                          |
+| ---------------------------- | ---------------------------------------------------------------------------------------------------- |
+| opengear.ng.auth             | Manage remote authentication, authorization, and accounting (AAA) configuration.                     |
+| opengear.ng.conns            | Manage network connection configuration.                                                             |
+| opengear.ng.facts            | Gather device information and network resource configuration facts.                                  |
+| opengear.ng.failover         | Manage failover configuration and retrieve failover status.                                          |
+| opengear.ng.firmware_upgrade | Manage firmware upgrades on Opengear devices.                                                        |
+| opengear.ng.groups           | Manage user group configuration.                                                                     |
+| opengear.ng.pdu              | Manage PDUs connected to the device, including configuration, monitoring, and control.               |
+| opengear.ng.physifs          | Manage physical network interface configuration.                                                     |
+| opengear.ng.ports            | Manage serial port configuration.                                                                    |
+| opengear.ng.services         | Manage system service configuration.                                                                 |
+| opengear.ng.static_routes    | Manage static route configuration.                                                                   |
+| opengear.ng.system           | Manage device system configuration and retrieve device information.                                  |
+| opengear.ng.users            | Manage user configuration.                                                                           |
 
 ## Installing The Collection
 

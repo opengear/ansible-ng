@@ -44,6 +44,7 @@ options:
       - auth
       - conns
       - failover
+      - firmware_upgrade
       - groups
       - physifs
       - ports

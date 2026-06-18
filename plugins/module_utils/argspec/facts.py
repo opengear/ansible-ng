@@ -18,18 +18,19 @@ class FactsArgs(object):  # pylint: disable=R0903
         pass
 
     choices = [
-        "all",
-        "auth",
-        "conns",
-        "failover",
-        "groups",
-        "physifs",
-        "ports",
-        "pdu",
-        "services",
-        "static_routes",
-        "system",
-        "users",
+        'all',
+        'auth',
+        'conns',
+        'failover',
+        'firmware_upgrade',
+        'groups',
+        'physifs',
+        'ports',
+        'pdu',
+        'services',
+        'static_routes',
+        'system',
+        'users'
     ]
 
     argument_spec = {

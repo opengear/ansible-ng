@@ -25,6 +25,7 @@ to communicate with Opengear devices via the REST API.
 | opengear.ng.conns         | Manage network connection configuration.                                                             |
 | opengear.ng.facts         | Gather device information and network resource configuration facts.                                  |
 | opengear.ng.failover      | Manage failover configuration and retrieve failover status.                                          |
+| opengear.ng.firmware_upgrade | Manage firmware upgrades on Opengear devices.                                                     |
 | opengear.ng.groups        | Manage user group configuration.                                                                     |
 | opengear.ng.pdu           | Manage PDUs connected to the device, including configuration, monitoring, and control.               |
 | opengear.ng.physifs       | Manage physical network interface configuration.                                                     |

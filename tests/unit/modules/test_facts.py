@@ -42,8 +42,27 @@ class TestFactsModule(TestModuleBase):
             ]
             return mock
 
+        def _setup_firmware_upgrade_mocks(self):
+            mock_version = patch(
+                "ansible_collections.opengear.ng.plugins.module_utils."
+                "facts.firmware_upgrade.FirmwareUpgradeFacts.get_version"
+            )
+            mock_version.start().return_value = {
+                'firmware_version': '25.04.0',
+                'rest_api_version': 'v2',
+            }
+
+            mock_status = patch(
+                "ansible_collections.opengear.ng.plugins.module_utils."
+                "facts.firmware_upgrade.FirmwareUpgradeFacts.get_upgrade_status"
+            )
+            mock_status.start().return_value = {'state': 'pending'}
+
+            return mock_version, mock_status
+
         self.mock_users = _setup_users_mocks(self)
         self.mock_groups = _setup_groups_mocks(self)
+        self.mock_fw_version, self.mock_fw_status = _setup_firmware_upgrade_mocks(self)
 
         self.mock_connection = patch(
             "ansible_collections.opengear.ng.plugins.module_utils."
@@ -55,6 +74,8 @@ class TestFactsModule(TestModuleBase):
         super(TestFactsModule, self).tearDown()
         self.mock_users.stop()
         self.mock_groups.stop()
+        self.mock_fw_version.stop()
+        self.mock_fw_status.stop()
         self.mock_connection.stop()
 
     def load_fixtures(self, commands=None):
@@ -76,6 +97,14 @@ class TestFactsModule(TestModuleBase):
 
         self.assertIn('ansible_facts', result)
         self.assertIn('groups', result['ansible_facts']['ansible_network_resources'])
+
+    def test_facts_gather_firmware_upgrade(self):
+        """Facts module dispatches correctly to firmware_upgrade facts class"""
+        set_module_args({'gather_network_resources': ['firmware_upgrade']})
+        result = self.execute_module(changed=False)
+
+        self.assertIn('ansible_facts', result)
+        self.assertIn('firmware_upgrade', result['ansible_facts']['ansible_network_resources'])
 
     def test_facts_gather_multiple(self):
         """Facts module can gather multiple resources in a single call"""

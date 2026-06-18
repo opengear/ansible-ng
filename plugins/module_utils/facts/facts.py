@@ -13,6 +13,7 @@ from ansible_collections.opengear.ng.plugins.module_utils.facts.auth import Auth
 from ansible_collections.opengear.ng.plugins.module_utils.facts.base import FactsBase
 from ansible_collections.opengear.ng.plugins.module_utils.facts.conns import ConnsFacts
 from ansible_collections.opengear.ng.plugins.module_utils.facts.failover import FailoverFacts
+from ansible_collections.opengear.ng.plugins.module_utils.facts.firmware_upgrade import FirmwareUpgradeFacts
 from ansible_collections.opengear.ng.plugins.module_utils.facts.groups import GroupsFacts
 from ansible_collections.opengear.ng.plugins.module_utils.facts.pdu import PduFacts
 from ansible_collections.opengear.ng.plugins.module_utils.facts.physifs import PhysifsFacts
@@ -28,6 +29,7 @@ FACT_RESOURCE_SUBSETS = dict(
     auth=AuthFacts,
     conns=ConnsFacts,
     failover=FailoverFacts,
+    firmware_upgrade=FirmwareUpgradeFacts,
     groups=GroupsFacts,
     pdu=PduFacts,
     physifs=PhysifsFacts,

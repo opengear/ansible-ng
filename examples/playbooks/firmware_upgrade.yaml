@@ -1,0 +1,60 @@
+---
+- name: Example playbook for performing firmware upgrade
+  hosts: opengear
+  gather_facts: false
+
+  tasks:
+    - name: Get firmware facts
+      opengear.ng.firmware_upgrade:
+        state: gathered
+      register: result
+
+    - name: Show firmware facts
+      ansible.builtin.debug:
+        var: result.gathered
+
+    - name: Upgrade firmware - accepts local image path or remote URL
+      opengear.ng.firmware_upgrade:
+        config:
+          version: 25.11.4
+          firmware_image: "{{ firmware_image_path }}"
+          ignore_version: true
+        state: merged
+      register: upgrade
+
+    # Poll until device goes offline or upgrade completes
+    - name: Wait for firmware upgrade to complete
+      opengear.ng.firmware_upgrade:
+        state: gathered
+      register: status
+      failed_when: false
+      until: >
+        (status.gathered | default({})).get('upgrade_status', {}).get('state', '') not in ['pending', 'running']
+      retries: 10
+      delay: 10
+      when: upgrade.changed
+
+    # Wait for device to come back online after reboot
+    - name: Wait for device to come back online
+      opengear.ng.firmware_upgrade:
+        state: gathered
+      register: final_status
+      failed_when: false
+      until: final_status.gathered is defined
+      retries: 30
+      delay: 10
+      when: upgrade.changed
+
+    - name: Verify upgrade succeeded
+      ansible.builtin.assert:
+        that:
+          - final_status.gathered.upgrade_status is none or
+            final_status.gathered.upgrade_status.state != 'error'
+        fail_msg: "Firmware upgrade failed: {{ final_status.gathered.upgrade_status.error_message | default('unknown error') }}"
+      when: upgrade.changed
+
+    - name: Verify firmware version
+      assert:
+        that:
+          - final_status.gathered.current_version == "25.11.4"
+      when: upgrade.changed

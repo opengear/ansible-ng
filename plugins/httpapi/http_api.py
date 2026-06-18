@@ -18,6 +18,8 @@ version_added: "1.0.0"
 '''
 
 import json
+import os
+import uuid
 
 from ansible.module_utils.connection import ConnectionError
 from ansible.plugins.httpapi import HttpApiBase
@@ -25,12 +27,18 @@ from ansible.plugins.httpapi import HttpApiBase
 
 def handle_response(response):
     if response:
-        handled_response = json.loads(response.getvalue())
+        content = response.getvalue()
+        if not content:
+            return {}
+        try:
+            handled_response = json.loads(content)
+        except ValueError:
+            return {}
         if "error" in handled_response:
             error = handled_response["error"][0]
             raise ConnectionError(error["text"], code=error["code"])
         return handled_response
-    return response
+    return {}
 
 
 class HttpApi(HttpApiBase):
@@ -56,6 +64,43 @@ class HttpApi(HttpApiBase):
         headers = {'Content-Type': 'application/json'}
         response, response_content = self.connection.send(self.path + path, json.dumps(data),
                                                           method=method, headers=headers)
+        return handle_response(response_content)
+
+    def send_multipart_request(self, path, file_path=None, additional_fields=None):
+        boundary = f'----FormBoundary{uuid.uuid4().hex}'
+        parts = b''
+
+        # Add additional fields first
+        if additional_fields:
+            for key, value in additional_fields.items():
+                if value:
+                    parts += (
+                        f'--{boundary}\r\n'
+                        f'Content-Disposition: form-data; name="{key}"\r\n\r\n'
+                        f'{value}\r\n'
+                    ).encode()
+
+        # Add file part only if file_path provided
+        if file_path:
+            with open(file_path, 'rb') as f:
+                file_data = f.read()
+            filename = os.path.basename(file_path)
+            parts += (
+                f'--{boundary}\r\n'
+                f'Content-Disposition: form-data; name="file"; filename="{filename}"\r\n'
+                f'Content-Type: application/octet-stream\r\n\r\n'
+            ).encode() + file_data + f'\r\n--{boundary}--\r\n'.encode()
+        else:
+            parts += f'--{boundary}--\r\n'.encode()
+
+        headers = {
+            'Content-Type': f'multipart/form-data; boundary={boundary}',
+            'Content-Length': str(len(parts)),
+        }
+
+        response, response_content = self.connection.send(
+            self.path + path, parts, method='POST', headers=headers
+        )
         return handle_response(response_content)
 
     def logout(self):

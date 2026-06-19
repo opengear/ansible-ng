@@ -80,11 +80,13 @@ jobs:
     needs: [lint, sanity, unit-test]
     runs-on: [self-hosted, ansible, integration-tests]
     environment: integration-tests
-    # automatically run on main branch and release branches
+    # automatically run on main branch and release branches with opengear repo only
     # manual trigger with run_integration
     if: |
-      (github.event_name == 'push' && github.ref == 'refs/heads/main') ||
-      (github.event_name == 'push' && startsWith(github.ref, 'refs/heads/release/')) ||
+      (github.event_name == 'push' && github.repository == 'opengear/ansible-ng' && (
+         github.ref == 'refs/heads/main' ||
+         startsWith(github.ref, 'refs/heads/release/')
+       )) ||
       (github.event_name == 'workflow_dispatch' && inputs.run_integration)
     steps:
       - name: Checkout

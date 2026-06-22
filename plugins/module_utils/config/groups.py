@@ -80,7 +80,10 @@ class Groups(ConfigBase):
                         group_id = command['path'].split('/')[-1]
                     try:
                         response = self._connection.send_request(command['data'], command['path'], command['method'])
-                        if group_id and command['method'] == 'PUT':
+                        if command['method'] == 'DELETE':
+                            # Delete returns no response body
+                            self.current_state.pop(group_id, None)
+                        elif group_id and command['method'] == 'PUT':
                             self.current_state[group_id] = response['group']
                         else:
                             self.current_state[response['group']['id']] = response['group']

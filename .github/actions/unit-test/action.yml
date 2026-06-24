@@ -30,4 +30,11 @@ runs:
         shell: bash
         run: |
           cd ~/.ansible/collections/ansible_collections/opengear/ng
-          ansible-test units --docker --requirements --python ${{ inputs.python-version }}
+          ansible-test units -v --coverage --docker --requirements --python ${{ inputs.python-version }}
+
+      - name: Upload test results
+        if: ${{ !cancelled() }}
+        uses: actions/upload-artifact@v4
+        with:
+          name: python-junit-results-${{ inputs.python-version }}
+          path: /home/runner/.ansible/collections/ansible_collections/opengear/ng/tests/output/junit/python${{ inputs.python-version }}-controller-units.xml

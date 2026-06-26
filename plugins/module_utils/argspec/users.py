@@ -24,6 +24,7 @@ class UsersArgs(object):  # pylint: disable=R0903
                 "description": {"type": "str"},
                 "enabled": {"type": "bool"},
                 "groups": {"elements": "str", "type": "list"},
+                "groupNames": {"elements": "str", "type": "list"},
                 "hashed_password": {"type": "str", "no_log": True},
                 "id": {"type": "str"},
                 "no_password": {"type": "bool"},

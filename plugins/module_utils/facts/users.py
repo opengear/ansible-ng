@@ -34,7 +34,7 @@ class UsersFacts(object):
         self.generated_spec = utils.generate_dict(facts_argument_spec)
 
     def get_device_data(self, connection):
-        return connection.get(None, 'users')['users']
+        return connection.get(None, 'users', query_params={'use_names': 'true'})['users']
 
     def populate_facts(self, connection, ansible_facts, data=None):
         """ Populate the facts for users

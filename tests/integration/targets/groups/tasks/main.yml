@@ -48,13 +48,17 @@
         state: gathered
       register: result
 
+    - name: Get ansible-test group from gathered
+      ansible.builtin.set_fact:
+        test_group: "{{ result.gathered | selectattr('groupname', 'equalto', 'ansible-test') | first }}"
+
     - name: Assert new group is present with correct config
       ansible.builtin.assert:
         that:
-          - result.gathered | selectattr('groupname', 'equalto', 'ansible-test') | list | length == 1
-          - (result.gathered | selectattr('groupname', 'equalto', 'ansible-test') | first).enabled == true
-          - (result.gathered | selectattr('groupname', 'equalto', 'ansible-test') | first).access_rights == ['pmshell']
-          - (result.gathered | selectattr('groupname', 'equalto', 'ansible-test') | first).ports == ['ports-1', 'ports-2']
+          - test_group is defined
+          - test_group.enabled == true
+          - test_group.access_rights == ['pmshell']
+          - test_group.ports == ['serial/by-opengear-id/port01', 'serial/by-opengear-id/port02']
 
   always:
     - name: Cleanup - delete ansible-test group
@@ -62,6 +66,10 @@
         config:
           - groupname: ansible-test
         state: deleted
+
+    - name: Unset test_group fact
+      ansible.builtin.set_fact:
+        test_group: null
 
 # --- merged: update (add port) ---
 - name: Test merged-update
@@ -97,10 +105,22 @@
         state: gathered
       register: result
 
+    - name: Get ansible-test group from gathered
+      ansible.builtin.set_fact:
+        test_group: "{{ result.gathered | selectattr('groupname', 'equalto', 'ansible-test') | first }}"
+
+    - name: Set expected ports
+      ansible.builtin.set_fact:
+        expected_ports:
+          - serial/by-opengear-id/port01
+          - serial/by-opengear-id/port02
+          - serial/by-opengear-id/port03
+
     - name: Assert all ports are present
       ansible.builtin.assert:
         that:
-          - (result.gathered | selectattr('groupname', 'equalto', 'ansible-test') | first).ports | sort == ['ports-1', 'ports-2', 'ports-3'] | sort
+          - test_group.ports | sort == expected_ports | sort
+        fail_msg: "Ports mismatch. Actual: {{ test_group.ports | sort }} Expected: {{ expected_ports | sort }}"
 
   always:
     - name: Cleanup - delete ansible-test group
@@ -108,6 +128,10 @@
         config:
           - groupname: ansible-test
         state: deleted
+
+    - name: Unset test_group fact
+      ansible.builtin.set_fact:
+        test_group: null
 
 # --- merged: idempotent ---
 - name: Test merged-idempotent
@@ -187,7 +211,7 @@
     - name: Assert ports were replaced not merged
       ansible.builtin.assert:
         that:
-          - (result.gathered | selectattr('groupname', 'equalto', 'ansible-test') | first).ports == ['ports-1']
+          - (result.gathered | selectattr('groupname', 'equalto', 'ansible-test') | first).ports == ['serial/by-opengear-id/port01']
 
   always:
     - name: Cleanup - delete ansible-test group

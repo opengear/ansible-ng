@@ -57,11 +57,14 @@ class HttpApi(HttpApiBase):
         response = self.send_request(data, login_path, 'POST')
         self.connection._auth = {'Authorization': 'Token ' + response['session']}
 
-    def get(self, command, path):
-        return self.send_request(data=command, path=path)
+    def get(self, command, path, query_params):
+        return self.send_request(data=command, path=path, query_params=query_params)
 
-    def send_request(self, data, path, method='GET'):
+    def send_request(self, data, path, method='GET', query_params=None):
         headers = {'Content-Type': 'application/json'}
+        if query_params:
+            query_string = '&'.join(f'{k}={v}' for k, v in query_params.items())
+            path = f'{path}?{query_string}'
         response, response_content = self.connection.send(self.path + path, json.dumps(data),
                                                           method=method, headers=headers)
         return handle_response(response_content)

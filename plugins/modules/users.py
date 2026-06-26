@@ -32,37 +32,46 @@ options:
     suboptions:
       description:
         type: str
-        description: suboption description
+        description: A descriptive string for the user.
       id:
         type: str
-        description: id
+        description: Unique identifier for the user. (read-only)
       username:
         type: str
-        description: username
+        description: The POSIX name for the user.
       enabled:
         type: bool
-        description: user enabled or not
+        description: Whether the user is enabled. Only enabled users may log in.
       password:
         type: str
-        description: Clear text passowrd
+        description: |
+          The plaintext password to set for the user.
+          For increased security, it is strongly recommended to enable Password Complexity.
       hashed_password:
         type: str
-        description: A hashed password compatible with the crypt GNU C Library function.
+        description: A hashed password to set for the user, compatible with the crypt GNU C Library function.
       no_password:
         type: bool
-        description: Remote authentication used if this flag is set.
+        description: |
+          Remote authentication used if this flag is set.
+          Set this to true for remote-only (AAA) users. Both password and hashed_password must be unset.
+          Set this to false for local users. One of password or hashed_password is required.
       ssh_password_enabled:
         type: bool
-        description: Whether SSH password access is enabled (default is true). If false a user can only use SSH with SSH keys.
+        description: |
+          Whether SSH password access is enabled. (Default: true)
+          If false a user can only use SSH with user_authorized_keys configured.
       groups:
         type: list
         elements: str
-        description: user groups
+        description: A list of groups for which this user is a member.
+      groupNames:
+        type: list
+        elements: str
+        description: A duplicate list of group names for the user. (read-only)
   state:
     description:
     - The state of the configuration after module completion.
-    - When C(merged), list values are replaced with the provided values,
-      not combined with existing values.
     type: str
     choices:
     - merged
@@ -72,6 +81,11 @@ options:
     - gathered
     - rendered
     default: merged
+notes:
+  - Diff output shows the expected configuration change based on the commands
+    generated. It does not reflect the actual device state after execution,
+    which may differ due to device-side normalization or concurrent changes.
+    Use state=gathered after a run to verify the actual device state.
 """
 
 EXAMPLES = """
@@ -82,12 +96,14 @@ EXAMPLES = """
         description: Network operations user
         enabled: true
         password: "{{ user_password }}"
+        no_password: false
         ssh_password_enabled: true
         groups:
           - netops
       - username: readonly
         description: Read only user
         enabled: true
+        password: "{{ user_password }}"
         no_password: false
         ssh_password_enabled: false
         groups:

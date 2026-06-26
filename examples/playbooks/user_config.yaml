@@ -1,20 +1,94 @@
 ---
+- name: Example playbook for managing users
+  hosts: opengear
+  gather_facts: false
 
-- name: User configuration
-  hosts: all
-  connection: httpapi
-  gather_facts: true
   tasks:
-    - name: Add user
+    - name: Gather users facts
+      opengear.ng.facts:
+        gather_network_resources:
+          - users
+      register: facts_result
+
+    - name: Show users facts
+      debug:
+        var: facts_result
+
+    # Create a new user, the new user is merged with current users config
+    - name: Create test admin user
       opengear.ng.users:
         config:
-          - username: test1
-            enabled: false
-            no_password: true
-            description: This user was changed.
-          - username: test3
+          - username: new-admin
+            description: Controlled admin group [Managed by Ansible]
             enabled: true
-            no_password: true
-            description: This user was added.
-        state:
-          overridden
+            groups: [admin]
+            password: "{{ test_user_password }}"
+            no_password: false
+            ssh_password_enabled: true
+        state: merged
+
+    # Create limited user groups
+    - name: Create limited user groups
+      opengear.ng.groups:
+        config:
+          - groupname: console-only
+            description: Allow access to console only
+            enabled: true
+            access_rights: [pmshell]
+            ports: [ports-1]
+            members: []
+          - groupname: port-configuration
+            description: Allow access to configure ports
+            enabled: true
+            access_rights: [port_config]
+            ports: [ports-1]
+            members: []
+        state: merged
+
+    # Create a non-admin user
+    - name: Create test limited user
+      opengear.ng.users:
+        config:
+          - username: limited-user
+            description: Controlled console user group [Managed by Ansible]
+            enabled: true
+            groups: [console-only]
+            password: "{{ test_user_password }}"
+            no_password: false
+            ssh_password_enabled: true
+        state: merged
+
+    # Modify the user to add an extra group, merged with current user config
+    - name: Increase groups of user (merge)
+      opengear.ng.users:
+        config:
+          - username: limited-user
+            groups: [port-configuration]
+        state: merged
+
+    # Reduce groups of user, set expected state with replace.
+    - name: Reduce access for limited-user
+      opengear.ng.users:
+        config:
+          - username: limited-user
+            description: Controlled console user group [Managed by Ansible]
+            enabled: true
+            groups: [console-only]
+            password: "{{ test_user_password }}"
+            no_password: false
+            ssh_password_enabled: true
+        state: replaced
+
+    - name: Delete users
+      opengear.ng.users:
+        config:
+          - username: new-admin
+          - username: limited-user
+        state: deleted
+
+    - name: Delete groups
+      opengear.ng.groups:
+        config:
+          - groupname: console-only
+          - groupname: port-configuration
+        state: deleted

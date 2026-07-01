@@ -11,7 +11,7 @@
       register: facts_result
 
     - name: Show groups facts
-      debug:
+      ansible.builtin.debug:
         var: facts_result
 
     # Create a new group, the new group is merged with current groups config

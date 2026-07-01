@@ -11,7 +11,7 @@
       register: facts_result
 
     - name: Show users facts
-      debug:
+      ansible.builtin.debug:
         var: facts_result
 
     # Create a new user, the new user is merged with current users config

@@ -54,7 +54,7 @@
       when: upgrade.changed
 
     - name: Verify firmware version
-      assert:
+      ansible.builtin.assert:
         that:
           - final_status.gathered.current_version == "25.11.4"
       when: upgrade.changed

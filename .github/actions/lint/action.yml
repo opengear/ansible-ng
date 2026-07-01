@@ -25,7 +25,3 @@ runs:
       - name: Lint opengear.ng
         shell: bash
         run: ansible-lint .
-
-      # - name: Lint examples
-      #   shell: bash
-      #   run: ansible-lint examples/

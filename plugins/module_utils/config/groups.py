@@ -188,23 +188,52 @@ class Groups(ConfigBase):
             groupname_id_map[group['groupname']] = group['id']
             id_group_map[group['id']] = group
 
+        # Build port normalization map for idempotency checks
+        port_map = self._build_port_map()
+
         self.current_state = deepcopy(id_group_map)
 
         state = self._module.params['state']
         if state == 'overridden':
-            commands = self._state_overridden(want, groupname_id_map, id_group_map)
+            commands = self._state_overridden(want, groupname_id_map, id_group_map, port_map)
         elif state == 'deleted':
             commands = self._state_deleted(want, groupname_id_map)
         elif state == 'merged':
-            commands = self._state_merged(want, groupname_id_map, id_group_map)
+            commands = self._state_merged(want, groupname_id_map, id_group_map, port_map)
         elif state == 'replaced':
-            commands = self._state_replaced(want, groupname_id_map, id_group_map)
+            commands = self._state_replaced(want, groupname_id_map, id_group_map, port_map)
         else:
             commands = []
         return commands
 
+    def _build_port_map(self):
+        """Build a map of port IDs to names and names to IDs."""
+        try:
+            ports = self._connection.send_request(None, 'ports', query_params={'use_names': 'false'})
+            port_map = {}
+            for port in ports.get('ports', []):
+                port_id = port.get('id')
+                port_name = port.get('device')
+                if port_id and port_name:
+                    port_map[port_id] = port_name
+                    port_map[port_name] = port_id
+            return port_map
+        except Exception:
+            return {}
+
     @staticmethod
-    def _state_replaced(want, groupname_id_map, id_group_map):
+    def _normalize_ports(ports, port_map):
+        """Normalize ports to port-id for consistent comparison."""
+        result = []
+        for p in (ports or []):
+            if p.startswith('ports-'):
+                result.append(p)
+            else:
+                result.append(port_map.get(p, p))
+        return sorted(result)
+
+    @staticmethod
+    def _state_replaced(want, groupname_id_map, id_group_map, port_map=None):
         """ The command generator when state is replaced
 
         :rtype: A list
@@ -217,15 +246,27 @@ class Groups(ConfigBase):
             if group_id in id_group_map:
                 data = remove_empties(group)
                 data['id'] = group_id
-                if is_subset(data, remove_empties(id_group_map[group_id])):
-                    continue
-            command = command_builder({'group': group}, 'groups/', group_id)
+                # Normalize ports for comparison
+                if port_map:
+                    data_compare = {**data}
+                    have_compare = remove_empties(id_group_map[group_id])
+                    if 'ports' in data_compare:
+                        data_compare['ports'] = Groups._normalize_ports(data_compare['ports'], port_map)
+                    if 'ports' in have_compare:
+                        have_compare['ports'] = Groups._normalize_ports(have_compare['ports'], port_map)
+                    if is_subset(data_compare, have_compare):
+                        continue
+                else:
+                    if is_subset(data, remove_empties(id_group_map[group_id])):
+                        continue
+                data.pop('id', None)
+            command = command_builder({'group': data}, 'groups/', group_id)
             if command:
                 commands.append(command)
         return commands
 
     @staticmethod
-    def _state_overridden(want, groupname_id_map, id_group_map):
+    def _state_overridden(want, groupname_id_map, id_group_map, port_map=None):
         """ The command generator when state is overridden
 
         :rtype: A list
@@ -245,11 +286,11 @@ class Groups(ConfigBase):
                 deleted_groups.pop(group_id)
         commands.extend(Groups._state_deleted(deleted_groups.values(), groupname_id_map))
 
-        commands.extend(Groups._state_replaced(want, groupname_id_map, id_group_map))
+        commands.extend(Groups._state_replaced(want, groupname_id_map, id_group_map, port_map))
         return commands
 
     @staticmethod
-    def _state_merged(want, groupname_id_map, id_group_map):
+    def _state_merged(want, groupname_id_map, id_group_map, port_map=None):
         """ The command generator when state is merged
 
         :rtype: A list
@@ -263,10 +304,23 @@ class Groups(ConfigBase):
             if group_id in id_group_map:
                 device_group = id_group_map[group_id]
                 merged_data = dict_merge(device_group, data)
-                if dict_diff(merged_data, device_group):
-                    data = merged_data
+                # Normalize ports for comparison
+                if port_map:
+                    merged_compare = {**merged_data}
+                    device_compare = {**device_group}
+                    if 'ports' in merged_compare:
+                        merged_compare['ports'] = Groups._normalize_ports(merged_compare['ports'], port_map)
+                    if 'ports' in device_compare:
+                        device_compare['ports'] = Groups._normalize_ports(device_compare['ports'], port_map)
+                    if dict_diff(merged_compare, device_compare):
+                        data = merged_data
+                    else:
+                        continue
                 else:
-                    continue
+                    if dict_diff(merged_data, device_group):
+                        data = merged_data
+                    else:
+                        continue
                 data.pop('id', None)
             else:
                 group_id = None

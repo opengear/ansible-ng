@@ -34,7 +34,7 @@ class GroupsFacts(object):
         self.generated_spec = utils.generate_dict(facts_argument_spec)
 
     def get_device_data(self, connection):
-        return connection.get(None, 'groups')['groups']
+        return connection.get(None, 'groups', query_params={'use_names': 'true'})['groups']
 
     def populate_facts(self, connection, ansible_facts, data=None):
         """ Populate the facts for groups

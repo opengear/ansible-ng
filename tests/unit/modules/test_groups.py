@@ -29,6 +29,12 @@ class TestGroupsModule(TestModuleBase):
         )
         self.get_device_data = self.mock_get_device_data.start()
 
+        self.mock_build_port_map = patch(
+            "ansible_collections.opengear.ng.plugins.module_utils."
+            "config.groups.Groups._build_port_map"
+        )
+        self.mock_build_port_map.start().return_value = {}
+
         self.mock_connection = patch(
             "ansible_collections.opengear.ng.plugins.module_utils."
             "config.base.Connection"
@@ -38,6 +44,7 @@ class TestGroupsModule(TestModuleBase):
     def tearDown(self):
         super(TestGroupsModule, self).tearDown()
         self.mock_get_device_data.stop()
+        self.mock_build_port_map.stop()
         self.mock_connection.stop()
 
     def load_fixtures(self, commands=None):
@@ -150,9 +157,6 @@ class TestGroupsModule(TestModuleBase):
                         'enabled': True,
                         'access_rights': ['web_ui',],
                         'ports': ['ports-1'],
-                        'members': None,
-                        'mode': None,
-                        'role': None,
                     }
                 },
                 'method': 'PUT'
@@ -195,9 +199,6 @@ class TestGroupsModule(TestModuleBase):
                         'enabled': True,
                         'access_rights': ['admin'],
                         'ports': [],
-                        'members': None,
-                        'mode': None,
-                        'role': None,
                     }
                 },
                 'method': 'PUT'

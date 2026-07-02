@@ -1,0 +1,3 @@
+# Ansible Lint configuration
+skip_list:
+  - no-handler

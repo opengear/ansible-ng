@@ -1,0 +1,58 @@
+---
+- name: Example playbook for managing user authorized keys
+  hosts: opengear
+  gather_facts: false
+
+  tasks:
+    - name: Gather user_authorized_keys facts
+      opengear.ng.facts:
+        gather_network_resources:
+          - user_authorized_keys
+      register: facts_result
+
+    - name: Show user_authorized_keys facts
+      ansible.builtin.debug:
+        var: facts_result
+
+    # Create user authorized keys, merged with the existing keys for that user
+    - name: Create user_authorized_keys
+      opengear.ng.user_authorized_keys:
+        config:
+          - username: root
+            keys:
+              - "ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAAAgQDPHCFeZyNzcdF4S1o4slJrdSuAJ8t36i4X0Kr9UUbDz/4W/XyqpFPT3Hw5HI\
+                 LT1lNbuX85FbGekrDQfqUmfCctPtVuVExchLL8O6zaV4fyQzDAshe1gU+wDOyW7INK6tla6F2BX4XZndwS+8VWF9ur30dRwFe4vE4q4vdnSRaTMQ== user@example.com"
+              - "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIKoIUqQoc2qsvbCUcs86mwG+zNSJfNJJVJTXXd1VC1Qm user@example.com"
+        state: merged
+
+    # Replace authorized keys for a user
+    - name: Replace list of authorized keys for a user
+      opengear.ng.user_authorized_keys:
+        config:
+          - username: root
+            keys:
+              - "ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAAAgQDPHCFeZyNzcdF4S1o4slJrdSuAJ8t36i4X0Kr9UUbDz/4W/XyqpFPT3Hw5HI\
+                 LT1lNbuX85FbGekrDQfqUmfCctPtVuVExchLL8O6zaV4fyQzDAshe1gU+wDOyW7INK6tla6F2BX4XZndwS+8VWF9ur30dRwFe4vE4q4vdnSRaTMQ== user@example.com"
+              - "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIKoIUqQoc2qsvbCUcs86mwG+zNSJfNJJVJTXXd1VC1Qm user@example2.com"
+        state: replaced
+
+    # Delete specific authorized key for a user
+    - name: Delete authorized key for a user
+      opengear.ng.user_authorized_keys:
+        config:
+          - username: root
+            keys:
+              - "ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAAAgQDPHCFeZyNzcdF4S1o4slJrdSuAJ8t36i4X0Kr9UUbDz/4W/XyqpFPT3Hw5HI\
+                 LT1lNbuX85FbGekrDQfqUmfCctPtVuVExchLL8O6zaV4fyQzDAshe1gU+wDOyW7INK6tla6F2BX4XZndwS+8VWF9ur30dRwFe4vE4q4vdnSRaTMQ== user@example.com"
+        state: deleted
+
+    # Delete all authorized keys for a user
+    - name: Delete authorized key for a user
+      opengear.ng.user_authorized_keys:
+        config:
+          - username: root
+            keys:
+              - "ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAAAgQDPHCFeZyNzcdF4S1o4slJrdSuAJ8t36i4X0Kr9UUbDz/4W/XyqpFPT3Hw5HI\
+                 LT1lNbuX85FbGekrDQfqUmfCctPtVuVExchLL8O6zaV4fyQzDAshe1gU+wDOyW7INK6tla6F2BX4XZndwS+8VWF9ur30dRwFe4vE4q4vdnSRaTMQ== user@example.com"
+              - "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIKoIUqQoc2qsvbCUcs86mwG+zNSJfNJJVJTXXd1VC1Qm user@example2.com"
+        state: deleted

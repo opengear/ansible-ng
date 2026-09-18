@@ -291,3 +291,43 @@ class TestPduConfigModule(TestModuleBase):
         after = json.loads(result['diff']['after'])
         self.assertEqual(before[0]['monitor'], False)
         self.assertEqual(after[0]['monitor'], True)
+
+    def test_diff_new_pdu_posts(self):
+        """A brand-new PDU (POST) still shows an empty-before/populated-after diff."""
+        set_module_args({
+            '_ansible_diff': True,
+            'config': [{
+                'name': 'rack-pdu-04',
+                'method': 'shell',
+                'driver': {'id': 'apc_pdu'},
+                'shell': {'username': 'admin', 'password': 'secret', 'port': 'ports-9'},
+            }],
+            'state': 'merged',
+        })
+        result = self.execute_module(changed=True)
+        self.assertIn('diff', result)
+        before = json.loads(result['diff']['before'])
+        after = json.loads(result['diff']['after'])
+        self.assertEqual(before, [{}])
+        self.assertEqual(after[0]['name'], 'rack-pdu-04')
+
+    def test_check_mode_with_diff_new_pdu(self):
+        """Check mode combined with diff mode still reports a new PDU, not an empty diff."""
+        set_module_args({
+            '_ansible_check_mode': True,
+            '_ansible_diff': True,
+            'config': [{
+                'name': 'rack-pdu-04',
+                'method': 'shell',
+                'driver': {'id': 'apc_pdu'},
+                'shell': {'username': 'admin', 'password': 'secret', 'port': 'ports-9'},
+            }],
+            'state': 'merged',
+        })
+        result = self.execute_module(changed=True)
+        self.connection.return_value.send_request.assert_not_called()
+        self.assertIn('diff', result)
+        before = json.loads(result['diff']['before'])
+        after = json.loads(result['diff']['after'])
+        self.assertEqual(before, [{}])
+        self.assertEqual(after[0]['name'], 'rack-pdu-04')

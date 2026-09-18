@@ -125,11 +125,15 @@ class PduConfig(ConfigBase):
                             raise exc
             else:
                 # Simulate state changes for check mode + diff
-                for command in commands:
+                for index, command in enumerate(commands):
                     if command['method'] == 'PUT':
                         pdu_id = command['path'].split('/')[-1]
                         if pdu_id in self.current_state:
                             self.current_state[pdu_id].update(command['data']['pdu'])
+                    elif command['method'] == 'POST':
+                        # No device-assigned id yet; key on position so the
+                        # new PDU still shows up in the simulated facts.
+                        self.current_state[f'__new_pdu_{index}__'] = deepcopy(command['data']['pdu'])
             result['changed'] = True
         if self.state in self.ACTION_STATES:
             result['commands'] = commands
@@ -155,6 +159,9 @@ class PduConfig(ConfigBase):
                                 after = {**before, **command['data']['pdu']}
                                 diff_before.append(before)
                                 diff_after.append(after)
+                        elif command['method'] == 'POST':
+                            diff_before.append({})
+                            diff_after.append(command['data']['pdu'])
                     result['diff'] = {
                         'before': json.dumps(diff_before, indent=4) + '\n',
                         'after': json.dumps(diff_after, indent=4) + '\n',

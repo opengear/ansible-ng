@@ -250,3 +250,48 @@ class TestServicesSyslogModule(TestModuleBase):
         })
         result = self.execute_module(changed=False)
         self.assertNotIn('diff', result)
+
+    def test_check_mode_with_diff_shows_new_server(self):
+        """Check mode combined with diff mode must show the new server, not
+        just re-echo the unchanged device facts as 'after'."""
+        set_module_args({
+            '_ansible_check_mode': True,
+            '_ansible_diff': True,
+            'config': [{
+                'address': 'syslog.example.com',
+                'port': 514,
+                'protocol': 'UDP',
+            }],
+            'state': 'merged',
+        })
+        result = self.execute_module(changed=True)
+        self.connection.return_value.send_request.assert_not_called()
+        self.assertIn('diff', result)
+        before = json.loads(result['diff']['before'])
+        after = json.loads(result['diff']['after'])
+        self.assertFalse(any(s['address'] == 'syslog.example.com' for s in before))
+        self.assertTrue(any(s['address'] == 'syslog.example.com' for s in after))
+
+    def test_check_mode_with_diff_shows_updated_server(self):
+        """Check mode combined with diff mode must show the updated field,
+        not just re-echo the unchanged device facts as 'after'."""
+        set_module_args({
+            '_ansible_check_mode': True,
+            '_ansible_diff': True,
+            'config': [{
+                'address': '192.168.33.200',
+                'port': 705,
+                'protocol': 'UDP',
+                'min_severity': 'critical',
+            }],
+            'state': 'merged',
+        })
+        result = self.execute_module(changed=True)
+        self.connection.return_value.send_request.assert_not_called()
+        self.assertIn('diff', result)
+        before = json.loads(result['diff']['before'])
+        after = json.loads(result['diff']['after'])
+        before_server = next(s for s in before if s['address'] == '192.168.33.200')
+        after_server = next(s for s in after if s['address'] == '192.168.33.200')
+        self.assertEqual(before_server['min_severity'], 'warning')
+        self.assertEqual(after_server['min_severity'], 'critical')

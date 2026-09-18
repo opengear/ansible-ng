@@ -232,3 +232,52 @@ class TestServicesSnmpAlertManagersModule(TestModuleBase):
         })
         result = self.execute_module(changed=False)
         self.assertNotIn('diff', result)
+
+    def test_check_mode_with_diff_shows_new_manager(self):
+        """Check mode combined with diff mode must show the new manager,
+        not just re-echo the unchanged device facts as 'after'."""
+        set_module_args({
+            '_ansible_check_mode': True,
+            '_ansible_diff': True,
+            'config': [{
+                'name': 'Third NMS',
+                'protocol': 'UDP',
+                'address': 'third.example.com',
+                'port': 162,
+                'version': 'v2c',
+                'msg_type': 'TRAP',
+                'community': 'public',
+            }],
+            'state': 'merged',
+        })
+        result = self.execute_module(changed=True)
+        self.connection.return_value.send_request.assert_not_called()
+        self.assertIn('diff', result)
+        before = json.loads(result['diff']['before'])
+        after = json.loads(result['diff']['after'])
+        self.assertFalse(any(m['name'] == 'Third NMS' for m in before))
+        self.assertTrue(any(m['name'] == 'Third NMS' for m in after))
+
+    def test_check_mode_with_diff_shows_updated_manager(self):
+        """Check mode combined with diff mode must show the updated field,
+        not just re-echo the unchanged device facts as 'after'."""
+        set_module_args({
+            '_ansible_check_mode': True,
+            '_ansible_diff': True,
+            'config': [{
+                'address': 'backup.example.com',
+                'port': 162,
+                'protocol': 'UDP',
+                'community': 'newsecret',
+            }],
+            'state': 'merged',
+        })
+        result = self.execute_module(changed=True)
+        self.connection.return_value.send_request.assert_not_called()
+        self.assertIn('diff', result)
+        before = json.loads(result['diff']['before'])
+        after = json.loads(result['diff']['after'])
+        before_manager = next(m for m in before if m['name'] == 'Backup NMS')
+        after_manager = next(m for m in after if m['name'] == 'Backup NMS')
+        self.assertEqual(before_manager['community'], 'public')
+        self.assertEqual(after_manager['community'], 'newsecret')

@@ -8,6 +8,7 @@ from __future__ import absolute_import, division, print_function
 
 __metaclass__ = type
 
+from copy import deepcopy
 import json
 
 from ansible.module_utils.connection import ConnectionError
@@ -53,6 +54,7 @@ class CollectionConfigBase(ConfigBase):
 
     def __init__(self, module):
         super(CollectionConfigBase, self).__init__(module)
+        self._diff_after = []
 
     def get_resource_facts(self):
         """ Get the 'facts' (the current configuration) for this resource.
@@ -98,7 +100,12 @@ class CollectionConfigBase(ConfigBase):
         else:
             result['commands'] = []
         if self.state in self.ACTION_STATES:
-            changed_facts = self.get_resource_facts()
+            if result['changed'] and self._module.check_mode:
+                # Simulated diff: nothing is sent in check mode so the
+                # expected changes are displayed in diff
+                changed_facts = self._diff_after
+            else:
+                changed_facts = self.get_resource_facts()
             result['before'] = existing_facts
             if result['changed']:
                 result['after'] = changed_facts
@@ -123,6 +130,7 @@ class CollectionConfigBase(ConfigBase):
         """
         want = [remove_empties(entry) for entry in (self._module.params['config'] or [])]
         have = existing_facts
+        self._diff_after = deepcopy(have)
         return to_list(self.set_state(want, have))
 
     def _identity(self, entry):
@@ -167,6 +175,7 @@ class CollectionConfigBase(ConfigBase):
         }
 
     def _delete(self, entry_id):
+        self._diff_after = [item for item in self._diff_after if item.get('id') != entry_id]
         return {
             'path': '{0}/{1}'.format(self.endpoint, entry_id),
             'data': None,
@@ -181,10 +190,17 @@ class CollectionConfigBase(ConfigBase):
             if the record is unchanged. """
         existing = have_by_identity.get(self._identity(entry))
         if existing is None:
+            self._diff_after.append(entry)
             return self._post(entry)
         existing_fields = {k: v for k, v in existing.items() if k not in self.readonly_fields}
         merged = dict_merge(existing_fields, entry)
         if dict_diff(existing_fields, merged):
+            after_entry = dict(existing)
+            after_entry.update(merged)
+            for index, item in enumerate(self._diff_after):
+                if item.get('id') == existing['id']:
+                    self._diff_after[index] = after_entry
+                    break
             return self._put(existing['id'], merged)
         return None
 

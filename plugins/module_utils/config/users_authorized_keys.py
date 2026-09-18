@@ -89,7 +89,12 @@ class UsersAuthorizedKeys(ConfigBase):
         result['commands'] = commands
 
         if self.state in self.ACTION_STATES:
-            changed_facts = self.get_users_authorized_keys_facts()
+            if result['changed'] and self._module.check_mode:
+                # Simulated diff: nothing is sent in check mode so the
+                # expected changes are displayed in diff
+                changed_facts = self._simulate_after(existing_facts, commands)
+            else:
+                changed_facts = self.get_users_authorized_keys_facts()
             result['before'] = existing_facts
             if result['changed']:
                 result['after'] = changed_facts
@@ -144,6 +149,26 @@ class UsersAuthorizedKeys(ConfigBase):
         else:
             commands = []
         return commands
+
+    @staticmethod
+    def _simulate_after(existing_facts, commands):
+        """ Simulate the expected after-state by the given commands applied to
+            the existing facts. """
+        after = deepcopy(existing_facts)
+        by_user_id = {entry['user_id']: entry for entry in after}
+        for command in commands:
+            parts = command['path'].split('/')
+            user_id = parts[1]
+            entry = by_user_id.get(user_id)
+            if not entry:
+                continue
+            if command['method'] == 'POST':
+                key = command['data']['authorized_key']['key']
+                entry.setdefault('keys', []).append({'id': None, 'key': key})
+            elif command['method'] == 'DELETE':
+                key_id = parts[-1]
+                entry['keys'] = [k for k in entry.get('keys', []) if k['id'] != key_id]
+        return after
 
     @staticmethod
     def _build_diff(commands, existing_facts):

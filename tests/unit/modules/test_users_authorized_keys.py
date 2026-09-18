@@ -248,6 +248,52 @@ class TestUsersAuthorizedKeysModule(TestModuleBase):
         ]
         self.execute_module(changed=True, commands=commands)
 
+    # --- diff mode ---
+    def test_users_authorized_keys_diff_merged_add_key(self):
+        """Diff is scoped to the affected user and shows the new key."""
+        import json
+        set_module_args({
+            '_ansible_diff': True,
+            'config': [{'username': 'user2', 'keys': ['ssh-rsa AAAAB3NzaC1yc2NEWKEY user2@laptop']}],
+            'state': 'merged',
+        })
+        result = self.execute_module(changed=True)
+        self.assertIn('diff', result)
+        before = json.loads(result['diff']['before'])
+        after = json.loads(result['diff']['after'])
+        self.assertEqual(before, [{'username': 'user2', 'keys': []}])
+        self.assertEqual(after, [{'username': 'user2', 'keys': ['ssh-rsa AAAAB3NzaC1yc2NEWKEY user2@laptop']}])
+
+    def test_users_authorized_keys_check_mode_with_diff(self):
+        """Check mode combined with diff mode shows the new key without sending."""
+        import json
+        set_module_args({
+            '_ansible_check_mode': True,
+            '_ansible_diff': True,
+            'config': [{'username': 'user2', 'keys': ['ssh-rsa AAAAB3NzaC1yc2NEWKEY user2@laptop']}],
+            'state': 'merged',
+        })
+        result = self.execute_module(changed=True)
+        self.connection.return_value.send_request.assert_not_called()
+        self.assertIn('diff', result)
+        before = json.loads(result['diff']['before'])
+        after = json.loads(result['diff']['after'])
+        self.assertEqual(before, [{'username': 'user2', 'keys': []}])
+        self.assertEqual(after, [{'username': 'user2', 'keys': ['ssh-rsa AAAAB3NzaC1yc2NEWKEY user2@laptop']}])
+
+    def test_users_authorized_keys_check_mode_after_is_simulated(self):
+        """result['after'] (separate from diff) must reflect the simulated
+        state in check mode, not a stale live re-fetch."""
+        set_module_args({
+            '_ansible_check_mode': True,
+            'config': [{'username': 'user2', 'keys': ['ssh-rsa AAAAB3NzaC1yc2NEWKEY user2@laptop']}],
+            'state': 'merged',
+        })
+        result = self.execute_module(changed=True)
+        self.connection.return_value.send_request.assert_not_called()
+        user2 = next(e for e in result['after'] if e['username'] == 'user2')
+        self.assertIn('ssh-rsa AAAAB3NzaC1yc2NEWKEY user2@laptop', [k['key'] for k in user2['keys']])
+
     # --- gathered ---
     def test_users_authorized_keys_gathered(self):
         """Gathered state returns current authorized keys structured by user"""

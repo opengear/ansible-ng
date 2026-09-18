@@ -247,6 +247,10 @@ class StaticRoutes(ConfigBase):
         """
         commands = []
 
+        if not want and not id_route_map:
+            # There are no existing records and no desired records, no-op
+            return commands
+
         deleted_routes = deepcopy(id_route_map)
 
         for route in want:

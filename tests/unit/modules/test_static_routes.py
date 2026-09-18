@@ -180,6 +180,17 @@ class TestStaticRoutesModule(TestModuleBase):
         ]
         self.execute_module(changed=True, commands=commands)
 
+    def test_static_routes_overridden_idempotent_when_none_exist_and_none_wanted(self):
+        """Overridden with no routes wanted and none on the device must be no-op"""
+        self.load_fixtures = lambda commands=None, filename=None: (
+            self.get_device_data.configure_mock(side_effect=None, return_value=[])
+        )
+        set_module_args({
+            'config': [],
+            'state': 'overridden',
+        })
+        self.execute_module(changed=False, commands=[])
+
     def test_static_routes_deleted(self):
         set_module_args({
             'config': [

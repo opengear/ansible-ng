@@ -188,3 +188,37 @@ class TestSystemAuthorizedKeysModule(TestModuleBase):
         })
         result = self.execute_module(changed=False)
         self.assertNotIn('diff', result)
+
+    def test_check_mode_with_diff_shows_new_key(self):
+        """Check mode combined with diff mode must show the new key, not
+        just re-echo the unchanged device facts as 'after'."""
+        set_module_args({
+            '_ansible_check_mode': True,
+            '_ansible_diff': True,
+            'config': [{'username': 'root', 'key': self.NEW_KEY}],
+            'state': 'merged',
+        })
+        result = self.execute_module(changed=True)
+        self.connection.return_value.send_request.assert_not_called()
+        self.assertIn('diff', result)
+        before = json.loads(result['diff']['before'])
+        after = json.loads(result['diff']['after'])
+        self.assertFalse(any(k['key'] == self.NEW_KEY for k in before))
+        self.assertTrue(any(k['key'] == self.NEW_KEY for k in after))
+
+    def test_check_mode_with_diff_shows_deletion(self):
+        """Check mode combined with diff mode must show the key as removed,
+        not just re-echo the unchanged device facts as 'after'."""
+        set_module_args({
+            '_ansible_check_mode': True,
+            '_ansible_diff': True,
+            'config': [{'username': 'admin', 'key': self.ADMIN_KEY}],
+            'state': 'deleted',
+        })
+        result = self.execute_module(changed=True)
+        self.connection.return_value.send_request.assert_not_called()
+        self.assertIn('diff', result)
+        before = json.loads(result['diff']['before'])
+        after = json.loads(result['diff']['after'])
+        self.assertTrue(any(k['key'] == self.ADMIN_KEY for k in before))
+        self.assertFalse(any(k['key'] == self.ADMIN_KEY for k in after))

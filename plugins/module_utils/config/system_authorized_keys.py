@@ -8,6 +8,7 @@ from __future__ import absolute_import, division, print_function
 
 __metaclass__ = type
 
+from copy import deepcopy
 import json
 
 from ansible.module_utils.connection import ConnectionError
@@ -84,7 +85,12 @@ class SystemAuthorizedKeys(ConfigBase):
         result['commands'] = commands
 
         if self.state in self.ACTION_STATES:
-            changed_facts = self.get_system_authorized_keys_facts()
+            if result['changed'] and self._module.check_mode:
+                # Simulated diff: nothing is sent in check mode so the
+                # expected changes are displayed in diff
+                changed_facts = self._simulate_after(existing_facts, commands)
+            else:
+                changed_facts = self.get_system_authorized_keys_facts()
             result['before'] = existing_facts
             if result['changed']:
                 result['after'] = changed_facts
@@ -132,6 +138,19 @@ class SystemAuthorizedKeys(ConfigBase):
         else:
             commands = self._state_merged(want, have_ids)
         return commands
+
+    @staticmethod
+    def _simulate_after(existing_facts, commands):
+        """ Simulate the expected after-state by the given commands applied to
+            the existing facts. """
+        after = deepcopy(existing_facts)
+        for command in commands:
+            if command['method'] == 'POST':
+                after.append(command['data']['system_authorized_key'])
+            elif command['method'] == 'DELETE':
+                key_id = command['path'].rstrip('/').split('/')[-1]
+                after = [entry for entry in after if entry.get('id') != key_id]
+        return after
 
     @staticmethod
     def _post(entry):

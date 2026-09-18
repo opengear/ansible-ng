@@ -437,3 +437,20 @@ class TestServicesConfigModule(TestModuleBase):
         })
         result = self.execute_module(changed=False)
         self.assertNotIn('diff', result)
+
+    def test_check_mode_with_diff_shows_simulated_change(self):
+        """Check mode combined with diff mode must simulate expected
+        device changes. Should be different to before facts."""
+        set_module_args({
+            '_ansible_check_mode': True,
+            '_ansible_diff': True,
+            'config': {'perifrouted': {'enabled': True}},
+            'state': 'merged',
+        })
+        result = self.execute_module(changed=True)
+        self.connection.return_value.send_request.assert_not_called()
+        self.assertIn('diff', result)
+        before = json.loads(result['diff']['before'])
+        after = json.loads(result['diff']['after'])
+        self.assertFalse(before['perifrouted']['enabled'])
+        self.assertTrue(after['perifrouted']['enabled'])

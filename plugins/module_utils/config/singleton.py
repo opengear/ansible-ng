@@ -8,6 +8,7 @@ from __future__ import absolute_import, division, print_function
 
 __metaclass__ = type
 
+from copy import deepcopy
 import json
 
 from ansible.module_utils.connection import ConnectionError
@@ -61,6 +62,7 @@ class SingletonConfigBase(ConfigBase):
 
     def __init__(self, module):
         super(SingletonConfigBase, self).__init__(module)
+        self._diff_after = {}
 
     def get_resource_facts(self):
         """ Get the 'facts' (the current configuration) for this resource.
@@ -102,7 +104,12 @@ class SingletonConfigBase(ConfigBase):
         if self.state in self.ACTION_STATES:
             result['commands'] = commands
         if self.state in self.ACTION_STATES or self.state == 'gathered':
-            changed_facts = self.get_resource_facts()
+            if result['changed'] and self._module.check_mode:
+                # Simulated diff: nothing is sent in check mode so the
+                # expected changes are displayed in diff
+                changed_facts = self._diff_after
+            else:
+                changed_facts = self.get_resource_facts()
         elif self.state == 'rendered':
             result['rendered'] = commands
         if self.state in self.ACTION_STATES:
@@ -146,6 +153,7 @@ class SingletonConfigBase(ConfigBase):
         :returns: the commands necessary to reach the desired configuration
         """
         commands = []
+        self._diff_after = deepcopy(have)
         to_set = dict_diff(have, want)
         for field in to_set:
             endpoint, body_path = self.field_map[field]
@@ -155,8 +163,12 @@ class SingletonConfigBase(ConfigBase):
                 if self.state == 'merged' and identity_keys:
                     data = reconcile_full_replace_lists(have[field], data, identity_keys)
                 data = dict_merge(have[field], data, identity_keys)
-                # The device assigns this; never echo it back on a PUT.
+                # The device retains its own id across a PUT; never echo it
+                # back in the request, but keep it in the simulated facts.
+                self._diff_after[field] = deepcopy(data)
                 data.pop('id', None)
+            else:
+                self._diff_after[field] = data
             for key in reversed(body_path):
                 data = {key: data}
             commands.append(command_builder(data, endpoint, method='PUT'))

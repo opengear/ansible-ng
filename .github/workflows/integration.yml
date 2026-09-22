@@ -23,13 +23,31 @@ concurrency:
   cancel-in-progress: true
 
 jobs:
+  check-gate:
+    name: Check
+    # Determine if PR integration tests are ready to run
+    runs-on: ubuntu-latest
+    outputs:
+      should_run: ${{ steps.evaluate.outputs.should_run }}
+    steps:
+      - id: evaluate
+        run: |
+          # Run if manually triggered or PR is non-draft
+          if [[ "${{ github.event_name }}" = "workflow_dispatch" ]] || \
+             [[ "${{ github.event.pull_request.draft }}" = "false" ]]; then
+            echo "should_run=true" >> $GITHUB_OUTPUT
+          else
+            echo "should_run=false" >> $GITHUB_OUTPUT
+          fi
+
   integration-test:
     name: Integration Tests
     runs-on: [self-hosted, ansible, integration-tests]
-    # Only run on upstream repository, skip if not ready for review
+    needs: check-gate
+    # Only run on upstream repository and if check-gate is true
     if: |
       github.repository == 'opengear/ansible-ng' &&
-      github.event.pull_request.draft == false
+      needs.check-gate.outputs.should_run == 'true'
     # All PRs require manual approval via the integration-tests environment
     environment: ${{ github.event_name == 'pull_request_target' && 'integration-tests' || '' }}
     # Use concurrency group shared with main post-merge integration-test job to serialise access

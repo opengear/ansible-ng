@@ -26,7 +26,7 @@ Before starting new work, sync your fork with upstream:
 
 ~~~bash
 git fetch upstream
-git rebase upstream/main
+git pull upstream main
 ~~~
 
 ## Local Installation
@@ -125,5 +125,6 @@ git rebase -i main
 ## Pull Requests
 
 - Keep PRs focused; one feature or fix per PR
-- Ensure CI passes before requesting review
 - Reference any related issues in the PR description
+- Ensure Main CI passes before marking "ready-for-review"
+- Integration tests are required to pass before merge

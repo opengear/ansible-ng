@@ -29,6 +29,7 @@ jobs:
     runs-on: ubuntu-latest
     outputs:
       should_run: ${{ steps.evaluate.outputs.should_run }}
+      target_env: ${{ steps.evaluate.outputs.target_env }}
     steps:
       - id: evaluate
         run: |
@@ -36,8 +37,10 @@ jobs:
           if [[ "${{ github.event_name }}" = "workflow_dispatch" ]] || \
              [[ "${{ github.event.pull_request.draft }}" = "false" ]]; then
             echo "should_run=true" >> $GITHUB_OUTPUT
+            echo "target_env=integration-tests" >> $GITHUB_OUTPUT
           else
             echo "should_run=false" >> $GITHUB_OUTPUT
+            echo "target_env=integration-tests" >> $GITHUB_OUTPUT
           fi
 
   integration-test:
@@ -49,7 +52,7 @@ jobs:
       github.repository == 'opengear/ansible-ng' &&
       needs.check-gate.outputs.should_run == 'true'
     # All PRs require manual approval via the integration-tests environment
-    environment: ${{ github.event_name == 'pull_request_target' && 'integration-tests' || '' }}
+    environment: ${{ needs.check-gate.outputs.target_env }}
     # Use concurrency group shared with main post-merge integration-test job to serialise access
     concurrency:
       group: integration-tests-device

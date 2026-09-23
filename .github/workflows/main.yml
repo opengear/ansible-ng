@@ -12,7 +12,7 @@
 # - release-readiness confirms the collection builds, has version incremented
 #   from main, and that generated release notes are included.
 #
-# On push to main:
+# On push or manual-dispatch to main:
 # - integration-test runs module tests against hardware devices to validate
 #   changes post-merge to main.
 # - detect-increment checks the version has been incremented from the previous
@@ -96,7 +96,8 @@ jobs:
       cancel-in-progress: false
     # Perform integration tests on upstream main only
     if: |
-      github.event_name == 'push' && github.repository == 'opengear/ansible-ng' &&
+      (github.event_name == 'push' || github.event_name == 'workflow_dispatch' ) &&
+      github.repository == 'opengear/ansible-ng' &&
       github.ref == 'refs/heads/main'
     steps:
       - name: Checkout
@@ -154,7 +155,7 @@ jobs:
     # Detemine if the version of main has been incremented following merge
     # of release branch.
     if: |
-      github.event_name == 'push' &&
+      (github.event_name == 'push' || github.event_name == 'workflow_dispatch' ) &&
       github.repository == 'opengear/ansible-ng' &&
       github.ref == 'refs/heads/main'
     outputs:

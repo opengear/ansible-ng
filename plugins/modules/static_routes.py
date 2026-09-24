@@ -10,17 +10,11 @@ from __future__ import absolute_import, division, print_function
 __metaclass__ = type
 
 
-ANSIBLE_METADATA = {
-    'metadata_version': '1.0',
-    'status': ['preview'],
-    'supported_by': 'opengear'
-}
-
 DOCUMENTATION = """
 ---
 module: static_routes
 short_description: Manages configuration of static routes on Opengear devices
-version_added: '1.0.0'
+version_added: '0.1.0'
 description:
   - Manages configuration of static routes on Opengear devices
 author:

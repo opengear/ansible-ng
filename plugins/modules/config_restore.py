@@ -12,7 +12,7 @@ __metaclass__ = type
 DOCUMENTATION = """
 ---
 module: config_restore
-version_added: '1.0.0'
+version_added: '0.1.0'
 short_description: Restore device configuration on Opengear devices
 description:
   - Restores a previously exported device configuration from a dotnotation

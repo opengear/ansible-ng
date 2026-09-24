@@ -9,16 +9,10 @@ from __future__ import absolute_import, division, print_function
 
 __metaclass__ = type
 
-ANSIBLE_METADATA = {
-    "metadata_version": "1.0",
-    "status": ["preview"],
-    "supported_by": "opengear",
-}
-
 DOCUMENTATION = """
 ---
 module: facts
-version_added: '1.0.0'
+version_added: '0.1.0'
 short_description: Gathers facts from Opengear devices
 description:
   - Gathers facts from Opengear devices, including device information and configuration state for specified network resources.
@@ -32,7 +26,7 @@ options:
     type: list
     elements: str
     default: 'all'
-    version_added: '1.0.0'
+    version_added: '0.1.0'
   gather_network_resources:
     description:
       - When supplied, this argument will restrict the facts collected to a given subset.
@@ -70,7 +64,7 @@ options:
       - system_time
       - users
       - users_authorized_keys
-    version_added: '1.0.0'
+    version_added: '0.1.0'
 """
 
 EXAMPLES = """

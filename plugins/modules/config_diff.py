@@ -12,7 +12,7 @@ __metaclass__ = type
 DOCUMENTATION = """
 ---
 module: config_diff
-version_added: '1.0.0'
+version_added: '0.1.0'
 short_description: Diff device configuration on Opengear devices
 description:
   - Compares the current device configuration against a provided configuration

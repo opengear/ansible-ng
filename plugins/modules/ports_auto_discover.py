@@ -8,16 +8,10 @@ from __future__ import absolute_import, division, print_function
 
 __metaclass__ = type
 
-ANSIBLE_METADATA = {
-    'metadata_version': '1.0',
-    'status': ['preview'],
-    'supported_by': 'opengear'
-}
-
 DOCUMENTATION = """
 ---
 module: ports_auto_discover
-version_added: '1.0.0'
+version_added: '0.1.0'
 short_description: Manages Port Auto-Discovery on Opengear devices
 description:
   - Configures the scheduled Port Auto-Discovery process and can trigger or

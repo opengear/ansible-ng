@@ -12,7 +12,7 @@ __metaclass__ = type
 DOCUMENTATION = """
 ---
 module: config_export
-version_added: '1.0.0'
+version_added: '0.1.0'
 short_description: Export device configuration from Opengear devices
 description:
   - Exports the current device configuration in dotnotation format.

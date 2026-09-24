@@ -14,7 +14,7 @@ short_description: HttpApi Plugin for Opengear devices
 description:
   - This HttpApi plugin provides methods to connect to Opengear devices over a HTTP-based API.
 options: {}
-version_added: "1.0.0"
+version_added: "0.1.0"
 '''
 
 import json

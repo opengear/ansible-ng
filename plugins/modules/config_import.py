@@ -12,7 +12,7 @@ __metaclass__ = type
 DOCUMENTATION = """
 ---
 module: config_import
-version_added: '1.0.0'
+version_added: '0.1.0'
 short_description: Import configuration on Opengear devices
 description:
   - Merges a provided configuration into the current device configuration

@@ -8,16 +8,10 @@
 from __future__ import absolute_import, division, print_function
 __metaclass__ = type
 
-ANSIBLE_METADATA = {
-    'metadata_version': '1.0',
-    'status': ['preview'],
-    'supported_by': 'opengear'
-}
-
 DOCUMENTATION = """
 ---
 module: users_authorized_keys
-version_added: '1.0.0'
+version_added: '0.1.0'
 short_description: Manages configuration of user authorized keys on Opengear devices
 description:
   - Manages configuration of user SSH authorized keys on Opengear devices

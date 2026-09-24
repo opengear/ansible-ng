@@ -8,16 +8,10 @@ from __future__ import absolute_import, division, print_function
 
 __metaclass__ = type
 
-ANSIBLE_METADATA = {
-    'metadata_version': '1.0',
-    'status': ['preview'],
-    'supported_by': 'opengear'
-}
-
 DOCUMENTATION = """
 ---
 module: ports_sessions
-version_added: '1.0.0'
+version_added: '0.1.0'
 short_description: Manage and inspect active pmshell sessions on serial ports
 description:
   - Manage active pmshell sessions on one or more serial ports.

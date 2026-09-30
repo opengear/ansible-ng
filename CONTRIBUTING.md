@@ -165,14 +165,28 @@ create a new PR.
 Purely internal changes (CI, docs, chore, tests, refactors with no behaviour change) do
 not need a fragment.
 
-Fragments accumulate on `main` and get rolled into `CHANGELOG.rst` together the next time
-a release is cut, so there is nothing else to do once it is merged. At [release](#releasing)
-time, the fragments are collected and used to generate the release notes, then removed from
-source.
+Fragments accumulate on `main` and get rolled into `CHANGELOG.rst` together when the next
+[release](#releasing) branch is prepared, so there is nothing else to do once it is merged.
+At that point, the fragments are collected and used to generate the release notes, then
+removed from source.
 
 ## Releasing
 
-Releases are prepared using a `release/**` branch:
+Releases are prepared, tested and published from a `release/**` branch, so only the changes
+on that branch are released, while allowing development to continue on `main`.
+
+```mermaid
+gitGraph
+    commit id: "feat: A"
+    branch "release/0.2.0"
+    commit id: "release: 0.2.0" tag: "ng-v0.2.0"
+    checkout main
+    commit id: "feat: B"
+    merge "release/0.2.0" id: "Merge release/0.2.0"
+    commit id: "feat: C"
+```
+
+The release steps are:
 
 1. Create the branch from `main`:
 
@@ -191,18 +205,29 @@ Releases are prepared using a `release/**` branch:
    git commit -m "release: 0.2.0"
    ```
 
-5. Push the branch and the **Main CI** `release-readiness` job checks that:
-   - the version was actually incremented from `main`,
-   - the collection builds cleanly, and
-   - `antsibull-changelog release` has been run and committed with release notes
-     for this version.
-6. When Main CI is green including the `release-readiness` job, create a PR against
-   `opengear/ansible-ng:main` as per the standard PR process which requires successful
-   integration tests.
-7. `Squash and merge` the release branch to `main`, then everything else is automatic:
-   - **Main CI** workflow performs lint, sanity and unit tests, then:
-     - `integration-test` confirms integration is ok
-     - `detect-increment` confirms the version increased
-     - `start-release` dispatches the `Release` workflow
-   - **Release** workflow builds the collection and waits for approval to publish to
-      Ansible Galaxy and create a GitHub release tagged `ng-v<version>`.
+5. Push the branch. The **Release** workflow runs for the release commit:
+   - The **Release readiness** job checks that:
+     - the version was incremented from where the branch was created, is greater than the latest
+       release in its history, and has not already been released,
+     - `antsibull-changelog release` has been run and committed with release notes for this version,
+     - the release branch does not change `.github`, as workflow changes must already be in main.
+   - The **Checks** job ensures lint, sanity and unit tests pass.
+   - The **Integration Tests (release)** job ensures tests pass against the test devices.
+6. The workflow then builds the collection and waits for approval via the `release` environment.
+   - Once approved it publishes to Ansible Galaxy and creates GitHub release tagged `ng-v<version>`
+     on the release branch.
+   - If the branch has moved since the run started, publishing is refused, cancel it and approve the
+     run for the latest commit.
+7. Merge the release branch to `main` with a **merge commit**, as shown in the summary of
+   the Release run:
+
+   ```bash
+   gh pr create --base main --head release/0.2.0 --title "release: 0.2.0" --fill
+   ```
+
+   Do not squash or rebase, so the tagged commit stays in the history of `main`.
+
+   Once merged, the release branch can be deleted.
+
+8. If a patch release is required, create a new release branch from the release tag. For example,
+   `git checkout -b release/0.2.1 ng-v0.2.0`.

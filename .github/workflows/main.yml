@@ -84,12 +84,12 @@ jobs:
           python-version: ${{ matrix.python }}
 
   integration-test:
-    name: Integration Tests
+    name: Integration Tests (main)
     needs: [lint, sanity, unit-test]
     runs-on: [self-hosted, ansible, integration-tests]
     # Perform integration tests automatically on merge to main as changes are
     # reviewed and manually approved pre-merge for all PRs.
-    environment: integration-tests-main
+    environment: integration-tests
     # Use concurrency group to serialise access to integration-test devices
     concurrency:
       group: integration-tests-device

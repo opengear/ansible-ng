@@ -2,7 +2,7 @@
 # Integration Tests (PR)
 #
 # Runs module tests against physical devices, requiring manual approval
-# via the integration-tests environment for all PRs.
+# via the integration-tests-pr environment for all PRs.
 
 name: Integration Tests (PR)
 
@@ -24,12 +24,12 @@ concurrency:
 
 jobs:
   integration-test:
-    name: Integration Tests
+    name: Integration Tests (PR)
     runs-on: [self-hosted, ansible, integration-tests]
     # Only run on upstream repository
     if: github.repository == 'opengear/ansible-ng'
-    # All PRs require manual approval via the integration-tests environment
-    environment: ${{ github.event_name == 'pull_request_target' && 'integration-tests' || '' }}
+    # All PRs require manual approval via the integration-tests-pr environment
+    environment: ${{ github.event_name == 'pull_request_target' && 'integration-tests-pr' || '' }}
     # Use concurrency group shared with main post-merge integration-test job to serialise access
     concurrency:
       group: integration-tests-device

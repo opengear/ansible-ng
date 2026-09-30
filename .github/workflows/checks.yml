@@ -1,0 +1,55 @@
+---
+# Checks
+#
+# Reusable workflow performing lint, sanity checks and unit tests without
+# access to a physical device. Called by Main CI and Release so that the same
+# checks gate merging to main and publishing a release.
+
+name: Checks
+
+on:
+  workflow_call:
+
+jobs:
+  lint:
+    runs-on: ubuntu-latest
+    name: Lint
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - name: Run lint checks
+        uses: ./.github/actions/lint
+        with:
+          python-version: "3.11"
+
+  sanity:
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        python:
+          - "3.10"
+          - "3.11"
+    name: "Sanity: python ${{ matrix.python }}"
+    steps:
+      - uses: actions/checkout@v4
+      - name: Run sanity check
+        uses: ./.github/actions/sanity
+        with:
+          python-version: ${{ matrix.python }}
+
+  unit-test:
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        python:
+          - "3.10"
+          - "3.11"
+    name: "Unit Tests: python ${{ matrix.python }}"
+    steps:
+      - uses: actions/checkout@v4
+      - name: Run unit tests
+        uses: ./.github/actions/unit-test
+        with:
+          python-version: ${{ matrix.python }}

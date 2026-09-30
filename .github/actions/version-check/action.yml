@@ -1,11 +1,14 @@
 name: Version Check
-description: Compare galaxy.yml's version against a base ref, and optionally require an increment
+description: Compare galaxy.yml's version against a base ref and released tags, and optionally require an increment
 
 inputs:
   base-ref:
-    description: Git ref to compare galaxy.yml against
+    description: >-
+      Git ref to compare galaxy.yml against. Defaults to the merge-base of
+      HEAD and origin/main, i.e. where the branch was cut, so later changes
+      to main do not affect the result.
     required: false
-    default: origin/main
+    default: ''
   require-increment:
     description: Fail if collection files changed but the version wasn't incremented
     required: false
@@ -22,11 +25,22 @@ outputs:
 runs:
   using: 'composite'
   steps:
+      - name: Resolve base ref
+        id: base
+        shell: bash
+        run: |
+          BASE="${{ inputs.base-ref }}"
+          if [ -z "$BASE" ]; then
+            BASE=$(git merge-base origin/main HEAD)
+          fi
+          echo "Comparing against: $BASE"
+          echo "ref=$BASE" >> $GITHUB_OUTPUT
+
       - name: Check if collection changed
         id: collection-changed
         shell: bash
         run: |
-          if git diff --name-only ${{ inputs.base-ref }}... | grep -qv '^.github/'; then
+          if git diff --name-only ${{ steps.base.outputs.ref }}... | grep -qv '^.github/'; then
             echo "changed=true" >> $GITHUB_OUTPUT
           else
             echo "changed=false" >> $GITHUB_OUTPUT
@@ -38,7 +52,7 @@ runs:
         run: |
           semver_re='^[0-9]+\.[0-9]+\.[0-9]+$'
 
-          OLD=$(git show ${{ inputs.base-ref }}:galaxy.yml \
+          OLD=$(git show ${{ steps.base.outputs.ref }}:galaxy.yml \
             | grep '^version:' | awk '{print $2}' || true)
           NEW=$(grep '^version:' galaxy.yml \
             | awk '{print $2}')
@@ -57,12 +71,12 @@ runs:
           echo "version=$NEW" >> $GITHUB_OUTPUT
 
           if [ "$OLD" = "" ]; then
-            echo "::warning::${{ inputs.base-ref }}'s galaxy.yml has no version - treating as incremented."
+            echo "::warning::${{ steps.base.outputs.ref }}'s galaxy.yml has no version - treating as incremented."
             echo "incremented=true" >> $GITHUB_OUTPUT
             exit 0
           fi
           if ! [[ "$OLD" =~ $semver_re ]]; then
-            echo "::error::${{ inputs.base-ref }}'s galaxy.yml version '$OLD' is not valid semver (expected MAJOR.MINOR.PATCH)."
+            echo "::error::${{ steps.base.outputs.ref }}'s galaxy.yml version '$OLD' is not valid semver (expected MAJOR.MINOR.PATCH)."
             exit 1
           fi
 
@@ -88,3 +102,32 @@ runs:
         run: |
           echo "::error::opengear.ng was modified but galaxy.yml version was not incremented"
           exit 1
+
+      - name: Check against released versions
+        if: inputs.require-increment == 'true'
+        shell: bash
+        run: |
+          NEW=$(grep '^version:' galaxy.yml | awk '{print $2}')
+
+          if git rev-parse -q --verify "refs/tags/ng-v$NEW" > /dev/null; then
+            echo "::error::Version $NEW has already been released (tag ng-v$NEW exists)."
+            exit 1
+          fi
+
+          # Latest release in this commit's history, so a patch release cut
+          # from an older commit is not compared against newer releases.
+          LAST=$(git describe --tags --abbrev=0 --match 'ng-v*' HEAD 2>/dev/null || true)
+          if [ -n "$LAST" ]; then
+            LAST="${LAST#ng-v}"
+            echo "Latest release in history: $LAST"
+            if [ "$(printf '%s\n%s\n' "$LAST" "$NEW" | sort -V | tail -n1)" != "$NEW" ]; then
+              echo "::error::Version $NEW is not greater than the latest release $LAST in this branch's history."
+              exit 1
+            fi
+          fi
+
+          for tag in $(git tag --list 'ng-v*'); do
+            if ! git merge-base --is-ancestor "$tag" origin/main; then
+              echo "::warning::Release $tag is not merged into main. Merge its release branch with a merge commit."
+            fi
+          done

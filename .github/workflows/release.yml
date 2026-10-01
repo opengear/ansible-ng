@@ -1,59 +1,166 @@
 ---
 # Release
 #
-# Only runs when dispatched by Main CI's start-release job, which
-# is triggered when integration-test succeeds on main and version is
-# incremented from the previous commit after a release branch is merged.
+# Runs on push or manual dispatch of a release/** branch. The release is
+# built, tagged and published from the release branch itself, so only the
+# changes on that branch are released, allowing continued development on main.
 #
-# The collection is built and uploaded as a GitHub artifact with the
-# build-collection action, then the release action retrieves the artifact
-# and publishes to Ansible Galaxy and GitHub as a tagged release following
-# manual approval via the release environment.
+# The release commit must pass the readiness checks, lint, sanity, unit tests
+# and the integration tests. The collection is then built once and, following
+# manual approval via the release environment, published to Ansible Galaxy and
+# to GitHub as a release tagged ng-v<version> on the release branch.
+#
+# Merging the release branch to main with a merge commit is then done by hand,
+# see CONTRIBUTING.md.
 
 name: Release
 
 on:
+  push:
+    branches:
+      - release/**
   workflow_dispatch:
-    inputs:
-      version:
-        description: Version being released (from galaxy.yml)
-        required: true
-      sha:
-        description: Commit to build, tag and release
-        required: true
 
+# Publishing is serialised. A newer push replaces a run that is still queued.
 concurrency:
   group: release
   cancel-in-progress: false
 
+permissions:
+  contents: read
+
 jobs:
-  build:
-    name: Build collection
-    if: github.repository == 'opengear/ansible-ng'
+  readiness:
+    name: Release readiness
     runs-on: ubuntu-latest
+    # Only release branches of the upstream repository. This also restricts
+    # manual dispatch to release branches.
+    if: |
+      github.repository == 'opengear/ansible-ng' &&
+      startsWith(github.ref, 'refs/heads/release/')
+    outputs:
+      version: ${{ steps.version.outputs.version }}
     steps:
       - uses: actions/checkout@v4
         with:
-          ref: ${{ inputs.sha }}
+          fetch-depth: 0
+
+      # The workflow that publishes a release must come from reviewed changes
+      # on main, never from the release branch being published.
+      - name: Check workflows and actions are unchanged from main
+        run: |
+          BASE=$(git merge-base origin/main HEAD)
+          if ! git diff --quiet "$BASE" HEAD -- .github; then
+            echo "::error::Release branches must not change .github. Land workflow changes on main first."
+            git diff --stat "$BASE" HEAD -- .github
+            exit 1
+          fi
+
+      - name: Check for a version increment
+        id: version
+        uses: ./.github/actions/version-check
+
+      - name: Check release notes were generated
+        uses: ./.github/actions/changelog-check
+
+  checks:
+    name: Checks
+    if: |
+      github.repository == 'opengear/ansible-ng' &&
+      startsWith(github.ref, 'refs/heads/release/')
+    uses: ./.github/workflows/checks.yml
+
+  integration-test:
+    name: Integration Tests (release)
+    # Only do integration tests once the release is known to be ready
+    needs: [readiness, checks]
+    runs-on: [self-hosted, ansible, integration-tests]
+    environment: integration-tests
+    # Use concurrency group to serialise access to integration-test devices
+    concurrency:
+      group: integration-tests-device
+      cancel-in-progress: false
+    if: |
+      github.repository == 'opengear/ansible-ng' &&
+      startsWith(github.ref, 'refs/heads/release/')
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Build inventory
+        run: |
+          cat > inventory.networking << EOF
+          [opengear]
+          test-om ansible_host=${{ secrets.OM2200_DEVICE_HOST }} \
+                  ansible_user=${{ secrets.OM2200_DEVICE_USER }} \
+                  ansible_password=${{ secrets.OM2200_DEVICE_PASSWORD }}
+          [opengear:vars]
+          ansible_connection=httpapi
+          ansible_network_os=opengear.ng.http_api
+          ansible_httpapi_use_ssl=true
+          ansible_httpapi_validate_certs=false
+          EOF
+
+      - name: Run integration tests
+        uses: ./.github/actions/integration-test
+        with:
+          python-version: "3.11"
+          inventory-file: inventory.networking
+
+      - name: Cleanup inventory
+        if: always()
+        shell: bash
+        run: rm -f inventory.networking
+
+  build:
+    name: Build collection
+    needs: [readiness, checks, integration-test]
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
 
       - name: Build collection
         uses: ./.github/actions/build-collection
 
-  release:
+  publish:
     name: Publish release
-    needs: build
-    if: github.repository == 'opengear/ansible-ng'
+    needs: [readiness, build]
     runs-on: ubuntu-latest
     environment: release
+    permissions:
+      contents: write
+    env:
+      BRANCH: ${{ github.ref_name }}
+      VERSION: ${{ needs.readiness.outputs.version }}
     steps:
       - uses: actions/checkout@v4
-        with:
-          ref: ${{ inputs.sha }}
+
+      # Approval can be given long after the checks ran. Refuse to publish
+      # if the branch has moved, as that commit has not been tested.
+      - name: Check the release branch has not moved
+        run: |
+          HEAD=$(git ls-remote origin "refs/heads/$BRANCH" | cut -f1)
+          if [ "$HEAD" != "$GITHUB_SHA" ]; then
+            echo "::error::$BRANCH has moved to $HEAD since this run started at $GITHUB_SHA. Approve the run for the latest commit instead."
+            exit 1
+          fi
 
       - name: Publish and release
         uses: ./.github/actions/release
         with:
-          version: ${{ inputs.version }}
-          sha: ${{ inputs.sha }}
+          version: ${{ env.VERSION }}
+          sha: ${{ github.sha }}
           galaxy-api-key: ${{ secrets.GALAXY_API_KEY }}
           github-token: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Summarise next steps
+        run: |
+          {
+            echo "### Released ng-v$VERSION"
+            echo
+            echo "Merge \`$BRANCH\` into \`main\` with a **merge commit**. Do not squash or rebase:"
+            echo
+            echo '```bash'
+            echo "gh pr create --base main --head $BRANCH --title \"release: $VERSION\" --fill"
+            echo '```'
+          } >> "$GITHUB_STEP_SUMMARY"

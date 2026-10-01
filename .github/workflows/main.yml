@@ -4,21 +4,13 @@
 # Perform lint, sanity checks and unit tests without access to a physical
 # device.
 # Triggered by:
-#   - push to main, release/** and feature/**
+#   - push to main and feature/**
 #   - pull_request including forked repositories
 #   - manual dispatch
 #
-# On push or manual dispatch of release/** branch:
-# - release-readiness confirms the collection builds, has version incremented
-#   from main, and that generated release notes are included.
-#
-# On push or manual-dispatch to main:
+# On push or manual dispatch to main:
 # - integration-test runs module tests against hardware devices to validate
 #   changes post-merge to main.
-# - detect-increment checks the version has been incremented from the previous
-#   commit on main to determine if a release should begin.
-# - start-release then dispatches the Release workflow only if both
-#   integration-test and detect-increment have succeeded.
 
 name: Main CI
 
@@ -27,7 +19,6 @@ on:
     branches:
       - main
       - feature/**
-      - release/**
   pull_request:
   workflow_dispatch:
 
@@ -88,72 +79,3 @@ jobs:
         if: always()
         shell: bash
         run: rm -f inventory.networking
-
-  release-readiness:
-    name: Release readiness
-    runs-on: ubuntu-latest
-    # Only runs on release branches, whether pushed to or manually dispatched
-    if: |
-      startsWith(github.ref, 'refs/heads/release/') &&
-      (github.event_name == 'push' || github.event_name == 'workflow_dispatch')
-    steps:
-      - uses: actions/checkout@v4
-        with:
-          fetch-depth: 0
-
-      - name: Check for a version increment
-        uses: ./.github/actions/version-check
-
-      - name: Build collection
-        uses: ./.github/actions/build-collection
-
-      - name: Check release notes were generated
-        uses: ./.github/actions/changelog-check
-
-  detect-increment:
-    name: Detect version increment
-    runs-on: ubuntu-latest
-    # Detemine if the version of main has been incremented following merge
-    # of release branch.
-    if: |
-      (github.event_name == 'push' || github.event_name == 'workflow_dispatch' ) &&
-      github.repository == 'opengear/ansible-ng' &&
-      github.ref == 'refs/heads/main'
-    outputs:
-      incremented: ${{ steps.version.outputs.incremented }}
-      version: ${{ steps.version.outputs.version }}
-    steps:
-      - uses: actions/checkout@v4
-        with:
-          fetch-depth: 0
-
-      - name: Check for a version increment
-        id: version
-        uses: ./.github/actions/version-check
-        with:
-          base-ref: ${{ github.event.before }}
-          # Detect a version change without enforcement
-          require-increment: 'false'
-
-  start-release:
-    name: Start release
-    needs: [detect-increment, integration-test]
-    runs-on: ubuntu-latest
-    permissions:
-      contents: read
-      actions: write
-    # Only if detect-increment determines the version is increased
-    # and integration-test succeeded.
-    if: |
-      needs.detect-increment.outputs.incremented == 'true' &&
-      needs.integration-test.result == 'success'
-    steps:
-      - name: Dispatch the release workflow
-        env:
-          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        run: |
-          gh workflow run release.yml \
-            --repo "${{ github.repository }}" \
-            --ref main \
-            -f version="${{ needs.detect-increment.outputs.version }}" \
-            -f sha="${{ github.sha }}"

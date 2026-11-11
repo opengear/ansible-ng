@@ -1,2 +1,133 @@
+---
 ancestor: null
-releases: {}
+releases:
+  0.1.0:
+    changes:
+      release_summary: "First release of the ``opengear.ng`` collection, providing\
+        \ Ansible modules\nfor managing Opengear devices.\n\nTested against Opengear\
+        \ device firmware 25.11.9.\n\nHighlights of this release:\n\n* **Configuration\
+        \ management** - ``config_export`` exports the device\n  configuration, ``config_diff``\
+        \ previews how a provided configuration\n  differs from the running one, ``config_import``\
+        \ merges a configuration\n  into the device, and ``config_restore`` restores\
+        \ a previously exported\n  configuration.\n* **Security** - ``local_password_policy``\
+        \ manages the expiry and\n  complexity policy for local user passwords.\n\
+        * **Firmware** - ``system_firmware_upgrade`` manages firmware upgrades.\n\
+        * **Serial ports** - ``ports_config``, ``ports_status``, ``ports_control``,\n\
+        \  ``ports_sessions`` and ``ports_auto_discover`` configure ports, report\n\
+        \  live status, send control actions, manage active sessions and manage\n\
+        \  port auto-discovery.\n* **PDUs** - ``pdu_config``, ``pdu_status`` and ``pdu_control``\
+        \ configure\n  connected PDUs, report PDU and outlet status, and send outlet\
+        \ power\n  actions.\n* **Networking** - ``conns``, ``physifs``, ``static_routes``\
+        \ and\n  ``failover`` manage network connections, physical interfaces, static\n\
+        \  routes and failover behaviour.\n* **Users and access** - ``users``, ``groups``,\
+        \ ``auth``,\n  ``users_authorized_keys`` and ``system_authorized_keys`` manage\
+        \ users,\n  groups, authentication and SSH authorized keys.\n* **Services\
+        \ and system** - ``services_config``, ``services_syslog``,\n  ``services_snmp_alert_managers``,\
+        \ ``system_config``, ``system_time``,\n  ``system_reboot`` and ``system_factory_reset``\
+        \ manage services and\n  general system settings, and reboot or factory reset\
+        \ a device.\n* **Facts** - ``facts`` gathers facts from devices.\n\nThe ``ports``,\
+        \ ``pdu``, ``services`` and ``system`` areas are split into\nsmaller, focused\
+        \ modules based on behaviour (for example configuration,\nstatus and control)\
+        \ rather than a single module per area.\n"
+    fragments:
+      - release-summary.yml
+    modules:
+      - description: Manages auth configuration for Opengear devices
+        name: auth
+        namespace: ''
+      - description: Diff device configuration on Opengear devices
+        name: config_diff
+        namespace: ''
+      - description: Export device configuration from Opengear devices
+        name: config_export
+        namespace: ''
+      - description: Import configuration on Opengear devices
+        name: config_import
+        namespace: ''
+      - description: Restore device configuration on Opengear devices
+        name: config_restore
+        namespace: ''
+      - description: Manages network connection configuration for Opengear devices
+        name: conns
+        namespace: ''
+      - description: Gathers facts from Opengear devices
+        name: facts
+        namespace: ''
+      - description: Manages configuration of failover behavior on Opengear devices
+        name: failover
+        namespace: ''
+      - description: Manages configuration of groups on Opengear devices
+        name: groups
+        namespace: ''
+      - description: Manages the local password policy on Opengear devices
+        name: local_password_policy
+        namespace: ''
+      - description: Manages configuration for PDUs connected to Opengear devices
+        name: pdu_config
+        namespace: ''
+      - description: Sends power actions to PDU outlets on Opengear devices
+        name: pdu_control
+        namespace: ''
+      - description: Gathers live status for PDUs and their outlets
+        name: pdu_status
+        namespace: ''
+      - description: Manages configuration of physical interfaces on Opengear devices
+        name: physifs
+        namespace: ''
+      - description: Manages Port Auto\-Discovery on Opengear devices
+        name: ports_auto_discover
+        namespace: ''
+      - description: Manages configuration of serial ports on Opengear devices
+        name: ports_config
+        namespace: ''
+      - description: Sends control actions to serial ports on Opengear devices
+        name: ports_control
+        namespace: ''
+      - description: Manage and inspect active pmshell sessions on serial ports
+        name: ports_sessions
+        namespace: ''
+      - description: Gathers live status data for serial ports
+        name: ports_status
+        namespace: ''
+      - description: Manages configuration of singleton services on Opengear devices
+        name: services_config
+        namespace: ''
+      - description: Manages SNMP Alert Manager configuration on Opengear devices
+        name: services_snmp_alert_managers
+        namespace: ''
+      - description: Manages remote syslog server configuration on Opengear devices
+        name: services_syslog
+        namespace: ''
+      - description: Manages configuration of static routes on Opengear devices
+        name: static_routes
+        namespace: ''
+      - description: Manages system\-level SSH authorized keys on Opengear devices
+        name: system_authorized_keys
+        namespace: ''
+      - description: Manages general system settings on Opengear devices
+        name: system_config
+        namespace: ''
+      - description: Erases the configuration of an Opengear appliance
+        name: system_factory_reset
+        namespace: ''
+      - description: Manages firmware upgrades on Opengear devices
+        name: system_firmware_upgrade
+        namespace: ''
+      - description: Reboots an Opengear appliance
+        name: system_reboot
+        namespace: ''
+      - description: Manages the system clock and timezone on Opengear devices
+        name: system_time
+        namespace: ''
+      - description: Manages configuration of users on Opengear devices
+        name: users
+        namespace: ''
+      - description: Manages configuration of user authorized keys on Opengear devices
+        name: users_authorized_keys
+        namespace: ''
+    plugins:
+      httpapi:
+        - description: HttpApi Plugin for Opengear devices
+          name: http_api
+          namespace: null
+    release_date: '2026-11-11'

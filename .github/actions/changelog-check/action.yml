@@ -17,9 +17,10 @@ runs:
         run: |
           antsibull-changelog release
 
-          if ! git diff --quiet -- changelogs/ CHANGELOG.rst; then
+          # Detect unexpected untracked changes
+          if [ -n "$(git status --porcelain -- changelogs/ CHANGELOG.rst)" ]; then
             echo "::error::Release notes are out of date. Run 'antsibull-changelog release' locally and commit the result (changelogs/changelog.yml, CHANGELOG.rst, and the consumed fragments)."
-            git diff --stat -- changelogs/ CHANGELOG.rst
+            git status --short -- changelogs/ CHANGELOG.rst
             exit 1
           fi
 

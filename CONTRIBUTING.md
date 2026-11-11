@@ -197,19 +197,25 @@ The release steps are:
 2. Increment the `version` in `galaxy.yml`.
 3. Optionally add a release_summary fragment giving a short overview of the release under
    `changelogs/fragments/`, as described above.
-4. Generate the release notes and commit the result:
+4. Generate the release notes and commit them together with the version increment:
 
    ```bash
    antsibull-changelog release
-   git add changelogs/ CHANGELOG.rst
+   git add galaxy.yml changelogs/ CHANGELOG.rst
+   git status --short   # should show nothing untracked or unstaged
    git commit -m "release: 0.2.0"
    ```
+
+   The release commit must contain the `galaxy.yml` version increment, the updated
+   `changelogs/changelog.yml`, the removal of the consumed fragments, and the generated
+   `CHANGELOG.rst`.
 
 5. Push the branch. The **Release** workflow runs for the release commit:
    - The **Release readiness** job checks that:
      - the version was incremented from where the branch was created, is greater than the latest
        release in its history, and has not already been released,
-     - `antsibull-changelog release` has been run and committed with release notes for this version,
+     - `antsibull-changelog release` has been run and its output, including `CHANGELOG.rst`, committed
+       with release notes for this version,
      - the release branch does not change `.github`, as workflow changes must already be in main.
    - The **Checks** job ensures lint, sanity and unit tests pass.
    - The **Integration Tests (release)** job ensures tests pass against the test devices.

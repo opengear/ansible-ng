@@ -1,5 +1,10 @@
 # Opengear OM Collection
 
+> **DEPRECATED:** The `opengear.om` collection is deprecated and will receive no further updates.
+> Please migrate to the [`opengear.ng`](https://github.com/opengear/ansible-ng) collection:
+>
+>     ansible-galaxy collection install opengear.ng
+
 The Ansible Opengear OM collection includes a variety of Ansible content to help automate the management of Opengear OM network appliances.
 
 ### Supported connections
